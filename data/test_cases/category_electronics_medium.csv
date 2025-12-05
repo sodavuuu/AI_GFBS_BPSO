@@ -1,0 +1,71 @@
+Transaction_ID,Sale_Date,Sales_Rep,Region,Total,Quantity,Category,Unit_Cost,Unit_Price,Customer_Type,Discount,Payment_Method,Sales_Channel,Region_and_Sales_Rep
+158,2023-04-07,Alice,West,5262.45,23,Electronics,3325.43,3401.1,New,0.1,Cash,Online,West-Alice
+160,2023-09-11,Eve,South,7597.37,23,Electronics,608.57,1032.22,New,0.25,Cash,Retail,South-Eve
+285,2023-12-26,Eve,West,6644.04,25,Electronics,4148.48,4293.69,New,0.11,Bank Transfer,Online,West-Eve
+209,2023-05-21,Alice,North,5108.98,37,Electronics,4146.99,4172.349999999999,Returning,0.06,Cash,Retail,North-Alice
+457,2023-07-06,Charlie,East,4396.81,11,Electronics,200.56,540.38,New,0.18,Bank Transfer,Online,East-Charlie
+620,2023-09-17,Charlie,North,4795.12,17,Electronics,83.64,528.49,New,0.13,Credit Card,Online,North-Charlie
+5,2023-03-24,Charlie,East,3750.2,13,Electronics,637.37,692.71,New,0.08,Credit Card,Online,East-Charlie
+665,2023-11-19,David,North,6601.62,47,Electronics,2189.54,2617.0,New,0.01,Bank Transfer,Online,North-David
+170,2023-10-21,David,East,5039.07,20,Electronics,1533.36,1649.7399999999998,Returning,0.1,Bank Transfer,Online,East-David
+496,2023-04-12,Charlie,North,5886.04,40,Electronics,2101.32,2440.63,New,0.26,Bank Transfer,Retail,North-Charlie
+813,2023-12-03,David,North,6521.53,35,Electronics,2885.16,3224.8399999999997,New,0.14,Cash,Online,North-David
+46,2023-04-04,Bob,East,198.25,12,Electronics,3544.48,3723.66,Returning,0.19,Cash,Online,East-Bob
+184,2023-11-28,Charlie,West,4860.81,6,Electronics,3703.93,3840.24,New,0.07,Credit Card,Online,West-Charlie
+899,2023-12-19,Eve,South,1633.76,12,Electronics,4920.46,5079.68,New,0.21,Credit Card,Retail,South-Eve
+250,2023-09-01,Charlie,West,5437.04,17,Electronics,4075.08,4262.21,New,0.17,Cash,Online,West-Charlie
+905,2023-04-26,David,South,1457.77,37,Electronics,4399.8,4801.06,New,0.13,Bank Transfer,Retail,South-David
+603,2023-12-10,Bob,North,6351.05,32,Electronics,2594.08,3074.59,New,0.14,Cash,Retail,North-Bob
+195,2023-05-28,Bob,South,7567.22,28,Electronics,933.16,1004.7,Returning,0.18,Bank Transfer,Online,South-Bob
+503,2023-01-17,Eve,West,4598.02,21,Electronics,2863.74,2953.91,New,0.1,Bank Transfer,Retail,West-Eve
+513,2023-09-21,David,North,2994.59,37,Electronics,4658.44,4823.5,Returning,0.14,Credit Card,Online,North-David
+736,2023-06-07,Alice,North,408.38,3,Electronics,2468.29,2723.13,Returning,0.08,Cash,Retail,North-Alice
+684,2023-02-06,Charlie,East,6242.69,26,Electronics,4266.36,4331.429999999999,Returning,0.14,Credit Card,Retail,East-Charlie
+398,2023-12-25,David,North,7405.06,43,Electronics,1249.17,1727.15,New,0.08,Cash,Retail,North-David
+449,2023-10-09,David,West,6757.36,41,Electronics,1509.98,1792.83,New,0.04,Cash,Retail,West-David
+687,2023-10-11,Eve,South,2030.25,32,Electronics,2866.47,3286.47,New,0.09,Credit Card,Online,South-Eve
+132,2023-10-15,Charlie,North,4510.86,42,Electronics,3139.99,3349.37,Returning,0.13,Credit Card,Retail,North-Charlie
+419,2023-01-17,Bob,South,2747.28,3,Electronics,1190.41,1582.89,New,0.02,Credit Card,Retail,South-Bob
+499,2023-10-02,Bob,West,3747.64,43,Electronics,1486.76,1505.44,New,0.08,Cash,Retail,West-Bob
+976,2023-08-31,Alice,East,2260.25,1,Electronics,2315.83,2333.19,New,0.01,Cash,Retail,East-Alice
+229,2023-08-02,Bob,North,4815.72,30,Electronics,3969.86,4281.79,Returning,0.08,Bank Transfer,Retail,North-Bob
+171,2023-06-08,Eve,West,219.82,49,Electronics,4812.41,5088.0,Returning,0.09,Credit Card,Online,West-Eve
+810,2023-01-22,Alice,South,5053.56,29,Electronics,4353.29,4405.8,New,0.04,Bank Transfer,Online,South-Alice
+846,2023-12-15,Bob,West,8821.63,13,Electronics,2231.66,2596.6099999999997,Returning,0.09,Bank Transfer,Retail,West-Bob
+861,2023-11-15,Alice,North,4703.59,23,Electronics,1676.42,2082.52,New,0.15,Bank Transfer,Retail,North-Alice
+164,2023-01-10,Eve,North,2548.67,25,Electronics,1933.39,1982.92,New,0.17,Bank Transfer,Online,North-Eve
+121,2023-03-03,Bob,West,2494.74,47,Electronics,2936.48,3096.64,New,0.06,Bank Transfer,Online,West-Bob
+955,2023-02-24,Eve,West,5751.69,22,Electronics,2269.32,2365.3500000000004,New,0.03,Cash,Retail,West-Eve
+900,2023-01-02,David,West,919.09,26,Electronics,4535.38,4557.56,New,0.0,Credit Card,Online,West-David
+954,2023-05-27,Alice,South,1498.11,7,Electronics,4094.68,4576.5,New,0.3,Cash,Retail,South-Alice
+113,2023-11-12,Alice,North,715.81,8,Electronics,3657.91,3729.27,New,0.09,Bank Transfer,Retail,North-Alice
+517,2023-07-17,David,North,5076.05,14,Electronics,1350.47,1514.61,New,0.2,Credit Card,Retail,North-David
+831,2023-10-01,Alice,West,5405.76,5,Electronics,3650.89,3930.06,New,0.17,Bank Transfer,Online,West-Alice
+119,2023-12-05,Charlie,East,9583.55,27,Electronics,68.99,429.29,Returning,0.18,Credit Card,Retail,East-Charlie
+430,2023-05-14,Charlie,West,9472.66,10,Electronics,3988.52,4240.23,New,0.05,Credit Card,Online,West-Charlie
+391,2023-04-25,Bob,South,9805.65,10,Electronics,3155.97,3263.49,Returning,0.04,Credit Card,Online,South-Bob
+88,2023-11-25,Alice,East,9432.97,37,Electronics,407.77,860.95,New,0.1,Credit Card,Retail,East-Alice
+521,2023-09-25,Eve,West,1143.39,37,Electronics,4127.05,4313.45,New,0.16,Cash,Online,West-Eve
+412,2023-05-26,Bob,East,848.28,1,Electronics,1406.24,1535.57,New,0.08,Credit Card,Retail,East-Bob
+782,2023-09-27,Eve,North,8657.89,32,Electronics,367.98,806.1400000000001,Returning,0.22,Credit Card,Retail,North-Eve
+465,2023-06-01,Alice,South,2496.02,2,Electronics,2038.4,2073.32,New,0.16,Cash,Retail,South-Alice
+566,2023-04-18,Alice,South,1874.61,9,Electronics,709.97,1029.71,Returning,0.13,Bank Transfer,Retail,South-Alice
+835,2023-03-13,Alice,North,5768.81,20,Electronics,4741.59,4975.2300000000005,New,0.09,Credit Card,Online,North-Alice
+234,2023-12-12,Alice,South,3382.49,47,Electronics,3551.76,3696.1,Returning,0.15,Bank Transfer,Retail,South-Alice
+903,2023-08-21,David,South,5677.74,12,Electronics,2316.13,2525.27,Returning,0.12,Credit Card,Retail,South-David
+559,2023-02-08,Eve,North,8395.29,39,Electronics,4232.81,4345.25,Returning,0.12,Bank Transfer,Online,North-Eve
+341,2023-10-18,Alice,North,5097.48,28,Electronics,224.32,715.06,Returning,0.01,Credit Card,Online,North-Alice
+721,2023-06-19,David,North,2768.17,36,Electronics,3835.64,4076.77,Returning,0.1,Credit Card,Retail,North-David
+990,2023-12-30,David,West,9215.32,28,Electronics,2097.84,2270.99,New,0.13,Credit Card,Retail,West-David
+473,2023-05-28,David,East,2222.62,35,Electronics,4867.64,5287.05,Returning,0.28,Credit Card,Online,East-David
+776,2023-01-12,Alice,West,7646.8,35,Electronics,1312.71,1352.11,Returning,0.22,Bank Transfer,Retail,West-Alice
+519,2023-01-25,Eve,South,4961.85,7,Electronics,1655.43,2001.08,New,0.19,Bank Transfer,Online,South-Eve
+428,2023-11-09,David,North,6016.92,9,Electronics,132.47,316.39,New,0.14,Credit Card,Online,North-David
+848,2023-01-24,Bob,East,6624.55,22,Electronics,4200.08,4647.28,Returning,0.11,Cash,Online,East-Bob
+488,2023-02-11,Eve,South,2082.79,26,Electronics,667.0,718.72,New,0.2,Cash,Retail,South-Eve
+421,2023-06-02,Bob,South,9653.65,12,Electronics,1878.3,2087.45,New,0.05,Bank Transfer,Retail,South-Bob
+211,2023-07-29,Charlie,West,485.41,38,Electronics,3955.66,4270.59,Returning,0.15,Credit Card,Online,West-Charlie
+826,2023-06-12,Charlie,South,6136.0,29,Electronics,3177.81,3222.65,Returning,0.08,Credit Card,Retail,South-Charlie
+61,2023-01-20,Charlie,East,2729.27,40,Electronics,4624.16,4731.98,New,0.2,Bank Transfer,Retail,East-Charlie
+383,2023-07-21,Bob,East,6359.59,32,Electronics,975.31,1176.17,New,0.22,Bank Transfer,Retail,East-Bob
+308,2023-08-10,Charlie,North,9217.85,17,Electronics,4966.66,5037.2699999999995,Returning,0.24,Bank Transfer,Retail,North-Charlie

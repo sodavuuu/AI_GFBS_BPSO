@@ -1,0 +1,31 @@
+Transaction_ID,Sale_Date,Sales_Rep,Region,Total,Quantity,Category,Unit_Cost,Unit_Price,Customer_Type,Discount,Payment_Method,Sales_Channel,Region_and_Sales_Rep
+433,2023-04-08,Eve,North,9452.89,5,Electronics,2947.22,3145.27,New,0.1,Credit Card,Retail,North-Eve
+310,2023-11-15,Bob,West,7316.91,19,Furniture,2844.97,3215.0,Returning,0.09,Credit Card,Retail,West-Bob
+873,2023-12-04,David,South,2186.85,14,Clothing,2188.35,2605.3599999999997,Returning,0.2,Credit Card,Retail,South-David
+105,2023-03-01,David,East,6773.89,28,Clothing,2873.53,3108.3,New,0.15,Credit Card,Retail,East-David
+812,2023-07-14,Eve,North,7001.64,16,Clothing,2530.15,2568.13,New,0.01,Credit Card,Online,North-Eve
+719,2023-12-11,Alice,West,6400.11,22,Clothing,241.85,613.09,Returning,0.06,Cash,Online,West-Alice
+743,2023-01-12,Charlie,North,6701.79,21,Food,3724.38,3988.7,New,0.03,Bank Transfer,Retail,North-Charlie
+404,2023-06-03,Eve,North,2132.8,41,Furniture,2055.49,2441.46,New,0.24,Credit Card,Online,North-Eve
+258,2023-05-08,Bob,East,5272.85,17,Furniture,727.38,764.54,Returning,0.17,Credit Card,Retail,East-Bob
+225,2023-02-20,Charlie,West,9469.92,26,Food,508.94,557.69,New,0.22,Credit Card,Retail,West-Charlie
+805,2023-03-16,David,South,6780.38,11,Furniture,741.48,878.09,New,0.29,Cash,Retail,South-David
+428,2023-11-09,David,North,6016.92,9,Electronics,132.47,316.39,New,0.14,Credit Card,Online,North-David
+548,2023-06-08,Bob,East,3608.81,19,Furniture,3457.28,3598.7200000000003,New,0.27,Bank Transfer,Online,East-Bob
+977,2023-02-04,Charlie,North,8753.31,7,Furniture,523.02,686.25,Returning,0.04,Cash,Online,North-Charlie
+259,2023-12-30,Alice,East,640.88,17,Furniture,395.11,676.6600000000001,Returning,0.25,Cash,Retail,East-Alice
+486,2023-03-02,Eve,West,9333.83,39,Food,3542.8,3603.02,Returning,0.26,Cash,Online,West-Eve
+88,2023-11-25,Alice,East,9432.97,37,Electronics,407.77,860.95,New,0.1,Credit Card,Retail,East-Alice
+814,2023-08-24,Bob,West,2825.35,20,Food,729.27,999.18,New,0.1,Bank Transfer,Online,West-Bob
+786,2023-07-23,Bob,West,7591.63,35,Furniture,2344.93,2707.25,New,0.12,Credit Card,Retail,West-Bob
+110,2023-12-27,David,East,4752.88,40,Food,1447.72,1875.75,New,0.13,Cash,Retail,East-David
+914,2023-05-23,Bob,North,3133.99,49,Furniture,2628.38,2644.54,Returning,0.11,Cash,Online,North-Bob
+643,2023-01-09,Charlie,North,2114.38,12,Furniture,639.16,746.28,Returning,0.04,Bank Transfer,Retail,North-Charlie
+442,2023-05-10,David,East,5870.97,47,Electronics,4291.33,4658.64,New,0.24,Credit Card,Retail,East-David
+39,2023-11-18,Alice,East,291.34,12,Furniture,1088.99,1545.0,Returning,0.04,Bank Transfer,Retail,East-Alice
+294,2023-02-01,Eve,North,2726.73,18,Furniture,2760.21,3219.58,New,0.27,Bank Transfer,Retail,North-Eve
+685,2023-11-12,Bob,South,7448.31,9,Electronics,310.24,451.81,Returning,0.1,Cash,Retail,South-Bob
+721,2023-06-19,David,North,2768.17,36,Electronics,3835.64,4076.77,Returning,0.1,Credit Card,Retail,North-David
+749,2023-04-23,David,South,9961.96,6,Furniture,4502.09,4879.72,New,0.13,Credit Card,Online,South-David
+466,2023-09-03,Charlie,West,7169.12,12,Electronics,2538.61,2971.75,Returning,0.24,Cash,Online,West-Charlie
+32,2023-08-31,Alice,North,1203.97,35,Food,3333.64,3764.52,Returning,0.02,Credit Card,Online,North-Alice

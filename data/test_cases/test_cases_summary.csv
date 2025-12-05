@@ -1,0 +1,14 @@
+Name,File,Type,Size,N_Items,Capacity,Total_Quantity,Total_Value,Avg_Value,Correlation_VW,N_Regions,N_Categories
+Category Clothing Medium,category_clothing_medium.csv,category,medium,70,286,1910,292757.89,4182.26,0.06,4,1
+Category Electronics Medium,category_electronics_medium.csv,category,medium,70,255,1702,338593.37,4837.05,0.0705,4,1
+Category Food Medium,category_food_medium.csv,category,medium,70,282,1885,359007.61,5128.68,-0.1298,4,1
+Category Furniture Medium,category_furniture_medium.csv,category,medium,70,267,1781,338455.03,4835.07,-0.1885,4,1
+Data High Correlation Medium,data_high_correlation_medium.csv,data_characteristic,medium,70,258,1724,302001.26,4314.3,0.0957,4,4
+Data High Value Medium,data_high_value_medium.csv,data_characteristic,medium,70,248,1656,509162.69,7273.75,0.0945,4,4
+Data Low Correlation Medium,data_low_correlation_medium.csv,data_characteristic,medium,70,296,1975,380322.34,5433.18,0.0932,4,4
+Region 1Regions Medium,region_1regions_medium.csv,regional,medium,70,274,1827,364764.94,5210.93,-0.091,1,4
+Region 2Regions Medium,region_2regions_medium.csv,regional,medium,70,264,1760,355506.39,5078.66,-0.1238,2,4
+Region 3Regions Medium,region_3regions_medium.csv,regional,medium,70,253,1689,348154.8,4973.64,-0.0426,3,4
+Size Large 70,size_large_70.csv,size,large,70,263,1754,380977.34,5442.53,-0.1438,4,4
+Size Medium 50,size_medium_50.csv,size,medium,50,178,1188,269334.46,5386.69,-0.1825,4,4
+Size Small 30,size_small_30.csv,size,small,30,101,679,165135.55,5504.52,-0.143,4,4

@@ -1,0 +1,13 @@
+[
+  {
+    "test_name": "region_north",
+    "n_items": 267,
+    "capacity": 8273405,
+    "algorithms": {
+      "gbfs": {
+        "total_value": 1156645,
+        "total_weight": 8264765,
+        "is_feasible": true,
+        "execution_time": 168.1370711326599,
+        "iterations": 10000,
+        "best_fitness": 
