@@ -290,7 +290,9 @@ class KnapsackSolverGUI(QMainWindow):
             self.visualize_items()
             
         except Exception as e:
-            QMessageBox.warning(self, "Error", f"Failed to load test case: {e}")
+            import traceback
+            error_msg = f"Failed to load test case: {str(e)}\n\nDetails:\n{traceback.format_exc()}"
+            QMessageBox.warning(self, "Error", error_msg)
     
     def visualize_items(self):
         """Visualize items distribution with manual selection"""
@@ -338,7 +340,7 @@ class KnapsackSolverGUI(QMainWindow):
         
         ax.set_xlabel('Weight', fontsize=12)
         ax.set_ylabel('Value', fontsize=12)
-        ax.set_title(f"Items Distribution - {tc['name']} (Click to Select/Deselect)", 
+        ax.set_title(f"Items Distribution - {tc.get('test_case_name', 'Unknown')} (Click to Select/Deselect)", 
                     fontsize=14, fontweight='bold')
         ax.legend(loc='upper right')
         ax.grid(True, alpha=0.3)
@@ -431,7 +433,7 @@ class KnapsackSolverGUI(QMainWindow):
     
     def visualize_all_results(self):
         """Visualize results in all tabs"""
-        if not self.results:
+        if not self.results or self.current_test_case is None:
             return
         
         # GBFS Tree
@@ -465,7 +467,7 @@ class KnapsackSolverGUI(QMainWindow):
     
     def visualize_comparison(self):
         """Visualize algorithm comparison"""
-        if not self.results:
+        if not self.results or self.current_test_case is None:
             return
         
         ax = self.canvas_comparison.ax
