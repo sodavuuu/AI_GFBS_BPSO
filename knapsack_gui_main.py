@@ -417,19 +417,19 @@ class KnapsackGUIEnhanced(QMainWindow):
         self.tab_comparison_layout.addWidget(self.canvas_comparison)
         self.tabs.addTab(self.tab_comparison, "Algorithm Comparison")
         
-        # Tab 4: GBFS State Tree
+        # Tab 4: GBFS Algorithm Flow
         self.tab_gbfs_tree = QWidget()
         self.tab_gbfs_tree_layout = QVBoxLayout(self.tab_gbfs_tree)
         self.canvas_gbfs_tree = MatplotlibCanvas(width=14, height=10)
         self.tab_gbfs_tree_layout.addWidget(self.canvas_gbfs_tree)
-        self.tabs.addTab(self.tab_gbfs_tree, "GBFS State Tree")
+        self.tabs.addTab(self.tab_gbfs_tree, "GBFS Algorithm Flow")
         
-        # Tab 5: BPSO Swarm
+        # Tab 5: BPSO Algorithm Flow
         self.tab_bpso_swarm = QWidget()
         self.tab_bpso_swarm_layout = QVBoxLayout(self.tab_bpso_swarm)
         self.canvas_bpso_swarm = MatplotlibCanvas(width=14, height=10)
         self.tab_bpso_swarm_layout.addWidget(self.canvas_bpso_swarm)
-        self.tabs.addTab(self.tab_bpso_swarm, "BPSO Swarm")
+        self.tabs.addTab(self.tab_bpso_swarm, "BPSO Algorithm Flow")
         
         # Tab 6: Regional Distribution
         self.tab_regional = QWidget()
@@ -752,65 +752,89 @@ class KnapsackGUIEnhanced(QMainWindow):
             traceback.print_exc()
     
     def visualize_convergence(self):
-        """Visualize BPSO convergence - Fixed for canvas"""
-        if 'bpso' not in self.results:
-            # Show placeholder
-            fig = self.canvas_convergence.fig
-            fig.clear()
-            ax = fig.add_subplot(111)
-            ax.text(0.5, 0.5, 'Run BPSO to see convergence', 
-                   ha='center', va='center', fontsize=14)
-            ax.axis('off')
-            self.canvas_convergence.draw()
-            return
-        
+        """Visualize multi-algorithm convergence - GA_TSP style (3 lines comparison)"""
         try:
             fig = self.canvas_convergence.fig
             fig.clear()
             ax = fig.add_subplot(111)
             
-            result = self.results['bpso']
+            # Collect convergence data from all algorithms
+            has_data = False
             
-            # Check if we have convergence history
-            if 'convergence' in result and 'best_fitness' in result['convergence']:
-                history = result['convergence']['best_fitness']
-                iterations = range(1, len(history) + 1)
-                
-                # Plot convergence curve
-                ax.plot(iterations, history, 'b-', linewidth=2.5, label='Best Fitness', 
-                       marker='o', markersize=5, markevery=max(1, len(history)//15))
-                
-                # Add average fitness if available
-                if 'avg_fitness' in result['convergence']:
-                    avg_history = result['convergence']['avg_fitness']
-                    ax.plot(iterations, avg_history, 'r--', linewidth=1.5, alpha=0.7,
-                           label='Average Fitness', marker='s', markersize=4,
-                           markevery=max(1, len(avg_history)//15))
-                
+            # BPSO convergence (primary)
+            if 'bpso' in self.results:
+                result = self.results['bpso']
+                if 'convergence' in result and 'best_fitness' in result['convergence']:
+                    history = result['convergence']['best_fitness']
+                    iterations = range(1, len(history) + 1)
+                    ax.plot(iterations, history, 'b-', linewidth=2.5, label='BPSO', 
+                           marker='o', markersize=5, markevery=max(1, len(history)//15))
+                    has_data = True
+                    
+                    # Add average as lighter line
+                    if 'avg_fitness' in result['convergence']:
+                        avg_history = result['convergence']['avg_fitness']
+                        ax.plot(iterations, avg_history, 'b--', linewidth=1.2, alpha=0.5,
+                               label='BPSO (Avg)', marker='', linestyle='--')
+            
+            # GBFS "convergence" (horizontal line at final value)
+            if 'gbfs' in self.results:
+                gbfs_value = self.results['gbfs']['total_value']
+                if 'bpso' in self.results and 'convergence' in self.results['bpso']:
+                    max_iter = len(self.results['bpso']['convergence'].get('best_fitness', [100]))
+                else:
+                    max_iter = 100
+                ax.axhline(y=gbfs_value, color='#e74c3c', linestyle='--', linewidth=2.5, 
+                          label='GBFS (Greedy)', alpha=0.8)
+                has_data = True
+            
+            # DP "convergence" (horizontal line at optimal)
+            if 'dp' in self.results:
+                dp_value = self.results['dp']['total_value']
+                if 'bpso' in self.results and 'convergence' in self.results['bpso']:
+                    max_iter = len(self.results['bpso']['convergence'].get('best_fitness', [100]))
+                else:
+                    max_iter = 100
+                ax.axhline(y=dp_value, color='#2ecc71', linestyle='-', linewidth=2.5, 
+                          label='DP (Optimal)', alpha=0.8)
+                has_data = True
+            
+            if has_data:
                 ax.set_xlabel('Iteration', fontsize=12, fontweight='bold')
                 ax.set_ylabel('Fitness Value', fontsize=12, fontweight='bold')
-                ax.set_title('BPSO Convergence Curve', fontsize=14, fontweight='bold', pad=15)
-                ax.legend(loc='lower right', fontsize=10)
-                ax.grid(True, alpha=0.3)
+                ax.set_title('Algorithm Convergence Comparison', fontsize=14, fontweight='bold', pad=15)
+                ax.legend(loc='lower right', fontsize=11, framealpha=0.9)
+                ax.grid(True, alpha=0.3, linestyle='--')
                 
-                # Annotate final value
-                final_val = history[-1]
-                ax.annotate(f'Final: {final_val:.0f}',
-                           xy=(len(history), final_val),
-                           xytext=(-60, 20), textcoords='offset points',
-                           bbox=dict(boxstyle='round', facecolor='yellow', alpha=0.7),
-                           arrowprops=dict(arrowstyle='->', lw=1.5))
+                # Add annotations for final values
+                if 'bpso' in self.results and 'convergence' in self.results['bpso']:
+                    if 'best_fitness' in self.results['bpso']['convergence']:
+                        history = self.results['bpso']['convergence']['best_fitness']
+                        final_val = history[-1]
+                        ax.annotate(f'BPSO: {final_val:.0f}',
+                                   xy=(len(history), final_val),
+                                   xytext=(-70, 15), textcoords='offset points',
+                                   bbox=dict(boxstyle='round,pad=0.4', facecolor='lightblue', alpha=0.8),
+                                   arrowprops=dict(arrowstyle='->', lw=1.5, color='blue'),
+                                   fontsize=10, fontweight='bold')
+                
+                if 'dp' in self.results:
+                    dp_value = self.results['dp']['total_value']
+                    ax.annotate(f'DP Optimal: {dp_value:.0f}',
+                               xy=(5, dp_value),
+                               xytext=(20, 20), textcoords='offset points',
+                               bbox=dict(boxstyle='round,pad=0.4', facecolor='lightgreen', alpha=0.8),
+                               arrowprops=dict(arrowstyle='->', lw=1.5, color='green'),
+                               fontsize=10, fontweight='bold')
             else:
-                # Fallback: show result summary
-                summary = (f"BPSO Result\n\n"
-                          f"Final Value: {result['total_value']:.0f}\n"
-                          f"Weight: {result['total_weight']:.1f}\n"
-                          f"Items: {len(result['selected_items'])}\n"
-                          f"Time: {result['execution_time']:.4f}s\n\n"
-                          f"(No convergence history available)")
-                ax.text(0.5, 0.5, summary, ha='center', va='center',
-                       fontsize=12, family='monospace',
-                       bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.3, pad=1.5))
+                # No data available
+                ax.text(0.5, 0.5, 'Run algorithms to see convergence comparison\n\n'
+                       'BPSO: Iterative convergence curve\n'
+                       'GBFS: Greedy single-pass solution\n'
+                       'DP: Optimal solution baseline',
+                       ha='center', va='center', fontsize=12,
+                       bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.3, pad=2),
+                       transform=ax.transAxes)
                 ax.axis('off')
             
             fig.tight_layout()
@@ -818,6 +842,8 @@ class KnapsackGUIEnhanced(QMainWindow):
             
         except Exception as e:
             print(f"Error visualizing convergence: {e}")
+            import traceback
+            traceback.print_exc()
             import traceback
             traceback.print_exc()
     
@@ -938,109 +964,394 @@ class KnapsackGUIEnhanced(QMainWindow):
             print(f"Error populating table: {e}")
     
     def visualize_gbfs_tree(self):
-        """Visualize GBFS state tree"""
-        if 'gbfs' not in self.results:
-            return
-        
+        """Visualize GBFS algorithm flowchart - GA_TSP style"""
         try:
             fig = self.canvas_gbfs_tree.fig
             fig.clear()
-            
-            result = self.results['gbfs']
-            
-            # Always show statistics
             ax = fig.add_subplot(111)
-            
-            info_text = (
-                f"GBFS Algorithm Results\n\n"
-                f"Total States Explored: {result.get('states_explored', 'N/A')}\n"
-                f"Final Value: {result['total_value']:.0f}\n"
-                f"Total Weight: {result['total_weight']:.1f}\n"
-                f"Items Selected: {len(result['selected_items'])}\n"
-                f"Execution Time: {result['execution_time']:.4f}s\n\n"
-            )
-            
-            # Check if we have state_tree for visualization
-            if 'state_tree' in result and result['state_tree']:
-                info_text += "State Tree: Available \u2713\n(Tree visualization feature coming soon)"
-                color = '#2ecc71'
-            else:
-                info_text += "State Tree: Not available\n(Algorithm didn't store tree data)"
-                color = '#e74c3c'
-            
-            ax.text(0.5, 0.5, info_text, ha='center', va='center', 
-                   fontsize=13, family='monospace',
-                   bbox=dict(boxstyle='round', facecolor=color, alpha=0.1, pad=1))
             ax.axis('off')
+            
+            # Draw GBFS flowchart (like GA_TSP algorithm diagram)
+            from matplotlib.patches import FancyBboxPatch, FancyArrowPatch, Circle
+            
+            # Title
+            ax.text(0.5, 0.95, 'GBFS (Greedy Best-First Search) Algorithm', 
+                   ha='center', fontsize=16, fontweight='bold', transform=ax.transAxes)
+            
+            # Coordinates for flowchart
+            y_start = 0.85
+            y_step = 0.11
+            x_center = 0.5
+            box_width = 0.3
+            box_height = 0.06
+            
+            # START box (green)
+            start_box = FancyBboxPatch((x_center - box_width/2, y_start - box_height/2), 
+                                      box_width, box_height,
+                                      boxstyle="round,pad=0.01", 
+                                      facecolor='#2ecc71', edgecolor='black', linewidth=2,
+                                      transform=ax.transAxes)
+            ax.add_patch(start_box)
+            ax.text(x_center, y_start, 'START', ha='center', va='center', 
+                   fontsize=11, fontweight='bold', color='white', transform=ax.transAxes)
+            
+            # Arrow down
+            y_current = y_start - box_height/2 - 0.02
+            arrow1 = FancyArrowPatch((x_center, y_current), (x_center, y_current - 0.03),
+                                    arrowstyle='->', mutation_scale=20, linewidth=2,
+                                    transform=ax.transAxes, color='black')
+            ax.add_patch(arrow1)
+            
+            # Step 1: Initialize
+            y_current -= 0.03 + box_height/2
+            box1 = FancyBboxPatch((x_center - box_width/2, y_current - box_height/2),
+                                 box_width, box_height,
+                                 boxstyle="round,pad=0.01",
+                                 facecolor='#3498db', edgecolor='black', linewidth=2,
+                                 transform=ax.transAxes)
+            ax.add_patch(box1)
+            ax.text(x_center, y_current, 'Initialize: Open List = {start_state}', 
+                   ha='center', va='center', fontsize=10, color='white', transform=ax.transAxes)
+            
+            # Arrow
+            y_current -= box_height/2 + 0.02
+            arrow2 = FancyArrowPatch((x_center, y_current), (x_center, y_current - 0.03),
+                                    arrowstyle='->', mutation_scale=20, linewidth=2,
+                                    transform=ax.transAxes, color='black')
+            ax.add_patch(arrow2)
+            
+            # Step 2: Loop condition (diamond)
+            y_current -= 0.03 + 0.04
+            diamond_points = [
+                [x_center, y_current + 0.04],
+                [x_center + 0.08, y_current],
+                [x_center, y_current - 0.04],
+                [x_center - 0.08, y_current]
+            ]
+            from matplotlib.patches import Polygon
+            diamond = Polygon(diamond_points, facecolor='#f39c12', edgecolor='black', 
+                            linewidth=2, transform=ax.transAxes)
+            ax.add_patch(diamond)
+            ax.text(x_center, y_current, 'Open List\nEmpty?', ha='center', va='center',
+                   fontsize=9, fontweight='bold', transform=ax.transAxes)
+            
+            # Yes arrow (right)
+            arrow_yes = FancyArrowPatch((x_center + 0.08, y_current), (x_center + 0.2, y_current),
+                                       arrowstyle='->', mutation_scale=20, linewidth=2,
+                                       transform=ax.transAxes, color='black')
+            ax.add_patch(arrow_yes)
+            ax.text(x_center + 0.12, y_current + 0.02, 'Yes', fontsize=9, transform=ax.transAxes)
+            
+            # END box (right, green)
+            end_box = FancyBboxPatch((x_center + 0.2, y_current - box_height/2),
+                                    0.15, box_height,
+                                    boxstyle="round,pad=0.01",
+                                    facecolor='#2ecc71', edgecolor='black', linewidth=2,
+                                    transform=ax.transAxes)
+            ax.add_patch(end_box)
+            ax.text(x_center + 0.275, y_current, 'END', ha='center', va='center',
+                   fontsize=11, fontweight='bold', color='white', transform=ax.transAxes)
+            
+            # No arrow (down)
+            y_current -= 0.04 + 0.02
+            arrow_no = FancyArrowPatch((x_center, y_current + 0.02), (x_center, y_current),
+                                      arrowstyle='->', mutation_scale=20, linewidth=2,
+                                      transform=ax.transAxes, color='black')
+            ax.add_patch(arrow_no)
+            ax.text(x_center - 0.05, y_current + 0.01, 'No', fontsize=9, transform=ax.transAxes)
+            
+            # Step 3: Pop best node
+            y_current -= box_height/2
+            box3 = FancyBboxPatch((x_center - box_width/2, y_current - box_height/2),
+                                 box_width, box_height,
+                                 boxstyle="round,pad=0.01",
+                                 facecolor='#3498db', edgecolor='black', linewidth=2,
+                                 transform=ax.transAxes)
+            ax.add_patch(box3)
+            ax.text(x_center, y_current, 'Pop node with best h(n)', 
+                   ha='center', va='center', fontsize=10, color='white', transform=ax.transAxes)
+            
+            # Arrow
+            y_current -= box_height/2 + 0.02
+            arrow4 = FancyArrowPatch((x_center, y_current), (x_center, y_current - 0.03),
+                                    arrowstyle='->', mutation_scale=20, linewidth=2,
+                                    transform=ax.transAxes, color='black')
+            ax.add_patch(arrow4)
+            
+            # Step 4: Goal check (diamond)
+            y_current -= 0.03 + 0.04
+            diamond2_points = [
+                [x_center, y_current + 0.04],
+                [x_center + 0.08, y_current],
+                [x_center, y_current - 0.04],
+                [x_center - 0.08, y_current]
+            ]
+            diamond2 = Polygon(diamond2_points, facecolor='#f39c12', edgecolor='black',
+                             linewidth=2, transform=ax.transAxes)
+            ax.add_patch(diamond2)
+            ax.text(x_center, y_current, 'Goal\nReached?', ha='center', va='center',
+                   fontsize=9, fontweight='bold', transform=ax.transAxes)
+            
+            # Yes arrow (right to END)
+            arrow_goal_yes = FancyArrowPatch((x_center + 0.08, y_current), 
+                                            (x_center + 0.2, y_current),
+                                            arrowstyle='->', mutation_scale=20, linewidth=2,
+                                            transform=ax.transAxes, color='green', linestyle='--')
+            ax.add_patch(arrow_goal_yes)
+            ax.text(x_center + 0.12, y_current - 0.02, 'Yes', fontsize=9, 
+                   color='green', transform=ax.transAxes)
+            
+            # No arrow (down)
+            y_current -= 0.04 + 0.02
+            arrow_goal_no = FancyArrowPatch((x_center, y_current + 0.02), 
+                                           (x_center, y_current),
+                                           arrowstyle='->', mutation_scale=20, linewidth=2,
+                                           transform=ax.transAxes, color='black')
+            ax.add_patch(arrow_goal_no)
+            ax.text(x_center - 0.05, y_current + 0.01, 'No', fontsize=9, transform=ax.transAxes)
+            
+            # Step 5: Expand node
+            y_current -= box_height/2
+            box5 = FancyBboxPatch((x_center - box_width/2, y_current - box_height/2),
+                                 box_width, box_height,
+                                 boxstyle="round,pad=0.01",
+                                 facecolor='#3498db', edgecolor='black', linewidth=2,
+                                 transform=ax.transAxes)
+            ax.add_patch(box5)
+            ax.text(x_center, y_current, 'Expand node, add children to Open List',
+                   ha='center', va='center', fontsize=9, color='white', transform=ax.transAxes)
+            
+            # Loop back arrow
+            arrow_loop = FancyArrowPatch((x_center - box_width/2, y_current),
+                                        (x_center - box_width/2 - 0.1, y_current),
+                                        arrowstyle='->', mutation_scale=20, linewidth=2,
+                                        transform=ax.transAxes, color='blue',
+                                        connectionstyle="arc3,rad=.5")
+            ax.add_patch(arrow_loop)
+            
+            # Heuristic info box
+            info_text = (
+                "Heuristic Function h(n):\n"
+                "Fractional Knapsack Bound\n"
+                "(Greedy relaxation of 0/1 Knapsack)"
+            )
+            info_box = FancyBboxPatch((0.05, 0.05), 0.35, 0.12,
+                                     boxstyle="round,pad=0.01",
+                                     facecolor='wheat', alpha=0.3, edgecolor='black',
+                                     linewidth=1.5, transform=ax.transAxes)
+            ax.add_patch(info_box)
+            ax.text(0.225, 0.11, info_text, ha='center', va='center',
+                   fontsize=9, family='monospace', transform=ax.transAxes)
+            
+            ax.set_xlim(0, 1)
+            ax.set_ylim(0, 1)
             
             self.canvas_gbfs_tree.draw()
             
         except Exception as e:
-            print(f"Error visualizing GBFS tree: {e}")
+            print(f"Error visualizing GBFS flowchart: {e}")
+            import traceback
+            traceback.print_exc()
     
     def visualize_bpso_swarm(self):
-        """Visualize BPSO swarm behavior"""
-        if 'bpso' not in self.results:
-            return
-        
+        """Visualize BPSO algorithm flowchart - GA_TSP style"""
         try:
             fig = self.canvas_bpso_swarm.fig
             fig.clear()
+            ax = fig.add_subplot(111)
+            ax.axis('off')
             
-            result = self.results['bpso']
+            # Draw BPSO flowchart
+            from matplotlib.patches import FancyBboxPatch, FancyArrowPatch, Polygon
             
-            # Check if BPSO has convergence data
-            if 'convergence' in result and 'best_fitness' in result['convergence']:
-                # Plot convergence curve
-                ax = fig.add_subplot(111)
-                history = result['convergence']['best_fitness']
-                iterations = range(1, len(history) + 1)
-                
-                ax.plot(iterations, history, 'b-', linewidth=2.5, label='Best Fitness', marker='o', 
-                       markersize=4, markevery=max(1, len(history)//20))
-                
-                if 'avg_fitness' in result['convergence']:
-                    avg_history = result['convergence']['avg_fitness']
-                    ax.plot(iterations, avg_history, 'r--', linewidth=1.5, alpha=0.7, 
-                           label='Average Fitness', marker='s', markersize=3, 
-                           markevery=max(1, len(avg_history)//20))
-                
-                ax.set_xlabel('Iteration', fontsize=12, fontweight='bold')
-                ax.set_ylabel('Fitness Value', fontsize=12, fontweight='bold')
-                ax.set_title('BPSO Swarm Convergence Behavior', fontsize=14, fontweight='bold', pad=15)
-                ax.legend(loc='lower right', fontsize=10)
-                ax.grid(True, alpha=0.3, linestyle='--')
-                
-                # Add final value annotation
-                final_val = history[-1]
-                ax.annotate(f'Final: {final_val:.0f}', 
-                           xy=(len(history), final_val), 
-                           xytext=(len(history)*0.7, final_val*1.05),
-                           fontsize=10, fontweight='bold',
-                           bbox=dict(boxstyle='round,pad=0.5', facecolor='yellow', alpha=0.7),
-                           arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0.3', lw=1.5))
-            else:
-                # Fallback: show statistics
-                ax = fig.add_subplot(111)
-                info_text = (
-                    f"BPSO Algorithm Results\n\n"
-                    f"Particles: {result.get('n_particles', 'N/A')}\n"
-                    f"Iterations: {result.get('iterations', 'N/A')}\n"
-                    f"Best Value: {result['total_value']:.0f}\n"
-                    f"Total Weight: {result['total_weight']:.1f}\n"
-                    f"Items Selected: {len(result['selected_items'])}\n\n"
-                    "(Swarm history visualization not available)"
-                )
-                ax.text(0.5, 0.5, info_text, ha='center', va='center', 
-                       fontsize=13, family='monospace',
-                       bbox=dict(boxstyle='round', facecolor='#3498db', alpha=0.1, pad=1))
-                ax.axis('off')
+            # Title
+            ax.text(0.5, 0.95, 'BPSO (Binary Particle Swarm Optimization) Algorithm',
+                   ha='center', fontsize=16, fontweight='bold', transform=ax.transAxes)
             
-            fig.tight_layout()
+            # Coordinates
+            y_start = 0.85
+            x_center = 0.5
+            box_width = 0.35
+            box_height = 0.06
+            
+            # START box (green)
+            start_box = FancyBboxPatch((x_center - box_width/2, y_start - box_height/2),
+                                      box_width, box_height,
+                                      boxstyle="round,pad=0.01",
+                                      facecolor='#2ecc71', edgecolor='black', linewidth=2,
+                                      transform=ax.transAxes)
+            ax.add_patch(start_box)
+            ax.text(x_center, y_start, 'START', ha='center', va='center',
+                   fontsize=11, fontweight='bold', color='white', transform=ax.transAxes)
+            
+            # Arrow down
+            y_current = y_start - box_height/2 - 0.02
+            arrow1 = FancyArrowPatch((x_center, y_current), (x_center, y_current - 0.03),
+                                    arrowstyle='->', mutation_scale=20, linewidth=2,
+                                    transform=ax.transAxes, color='black')
+            ax.add_patch(arrow1)
+            
+            # Step 1: Initialize
+            y_current -= 0.03 + box_height/2
+            box1 = FancyBboxPatch((x_center - box_width/2, y_current - box_height/2),
+                                 box_width, box_height,
+                                 boxstyle="round,pad=0.01",
+                                 facecolor='#3498db', edgecolor='black', linewidth=2,
+                                 transform=ax.transAxes)
+            ax.add_patch(box1)
+            ax.text(x_center, y_current, 'Initialize: swarm (N particles), velocities, pbest, gbest',
+                   ha='center', va='center', fontsize=9, color='white', transform=ax.transAxes)
+            
+            # Arrow
+            y_current -= box_height/2 + 0.02
+            arrow2 = FancyArrowPatch((x_center, y_current), (x_center, y_current - 0.03),
+                                    arrowstyle='->', mutation_scale=20, linewidth=2,
+                                    transform=ax.transAxes, color='black')
+            ax.add_patch(arrow2)
+            
+            # Step 2: Loop condition (diamond)
+            y_current -= 0.03 + 0.04
+            diamond_points = [
+                [x_center, y_current + 0.04],
+                [x_center + 0.08, y_current],
+                [x_center, y_current - 0.04],
+                [x_center - 0.08, y_current]
+            ]
+            diamond = Polygon(diamond_points, facecolor='#f39c12', edgecolor='black',
+                            linewidth=2, transform=ax.transAxes)
+            ax.add_patch(diamond)
+            ax.text(x_center, y_current, 'Iterations\n< Max?', ha='center', va='center',
+                   fontsize=9, fontweight='bold', transform=ax.transAxes)
+            
+            # Yes arrow (right)
+            arrow_yes = FancyArrowPatch((x_center + 0.08, y_current), (x_center + 0.2, y_current),
+                                       arrowstyle='->', mutation_scale=20, linewidth=2,
+                                       transform=ax.transAxes, color='black')
+            ax.add_patch(arrow_yes)
+            ax.text(x_center + 0.12, y_current + 0.02, 'No', fontsize=9, transform=ax.transAxes)
+            
+            # END box (right, green)
+            end_box = FancyBboxPatch((x_center + 0.2, y_current - box_height/2),
+                                    0.15, box_height,
+                                    boxstyle="round,pad=0.01",
+                                    facecolor='#2ecc71', edgecolor='black', linewidth=2,
+                                    transform=ax.transAxes)
+            ax.add_patch(end_box)
+            ax.text(x_center + 0.275, y_current, 'END', ha='center', va='center',
+                   fontsize=11, fontweight='bold', color='white', transform=ax.transAxes)
+            
+            # Yes arrow (down)
+            y_current -= 0.04 + 0.02
+            arrow_no = FancyArrowPatch((x_center, y_current + 0.02), (x_center, y_current),
+                                      arrowstyle='->', mutation_scale=20, linewidth=2,
+                                      transform=ax.transAxes, color='black')
+            ax.add_patch(arrow_no)
+            ax.text(x_center - 0.05, y_current + 0.01, 'Yes', fontsize=9, transform=ax.transAxes)
+            
+            # Step 3: For each particle
+            y_current -= box_height/2
+            box3 = FancyBboxPatch((x_center - box_width/2, y_current - box_height/2),
+                                 box_width, box_height,
+                                 boxstyle="round,pad=0.01",
+                                 facecolor='#9b59b6', edgecolor='black', linewidth=2,
+                                 transform=ax.transAxes)
+            ax.add_patch(box3)
+            ax.text(x_center, y_current, 'For each particle i in swarm:',
+                   ha='center', va='center', fontsize=9, color='white', transform=ax.transAxes)
+            
+            # Arrow
+            y_current -= box_height/2 + 0.02
+            arrow4 = FancyArrowPatch((x_center, y_current), (x_center, y_current - 0.03),
+                                    arrowstyle='->', mutation_scale=20, linewidth=2,
+                                    transform=ax.transAxes, color='black')
+            ax.add_patch(arrow4)
+            
+            # Step 4: Update velocity
+            y_current -= 0.03 + box_height/2
+            box4 = FancyBboxPatch((x_center - box_width/2, y_current - box_height/2),
+                                 box_width, box_height,
+                                 boxstyle="round,pad=0.01",
+                                 facecolor='#3498db', edgecolor='black', linewidth=2,
+                                 transform=ax.transAxes)
+            ax.add_patch(box4)
+            ax.text(x_center, y_current, 'v[i] = w*v[i] + c1*r1*(pbest[i]-x[i]) + c2*r2*(gbest-x[i])',
+                   ha='center', va='center', fontsize=8, color='white', 
+                   family='monospace', transform=ax.transAxes)
+            
+            # Arrow
+            y_current -= box_height/2 + 0.02
+            arrow5 = FancyArrowPatch((x_center, y_current), (x_center, y_current - 0.03),
+                                    arrowstyle='->', mutation_scale=20, linewidth=2,
+                                    transform=ax.transAxes, color='black')
+            ax.add_patch(arrow5)
+            
+            # Step 5: Update position (sigmoid)
+            y_current -= 0.03 + box_height/2
+            box5 = FancyBboxPatch((x_center - box_width/2, y_current - box_height/2),
+                                 box_width, box_height,
+                                 boxstyle="round,pad=0.01",
+                                 facecolor='#3498db', edgecolor='black', linewidth=2,
+                                 transform=ax.transAxes)
+            ax.add_patch(box5)
+            ax.text(x_center, y_current, 'x[i] = 1 if sigmoid(v[i]) > rand() else 0',
+                   ha='center', va='center', fontsize=9, color='white', 
+                   family='monospace', transform=ax.transAxes)
+            
+            # Arrow
+            y_current -= box_height/2 + 0.02
+            arrow6 = FancyArrowPatch((x_center, y_current), (x_center, y_current - 0.03),
+                                    arrowstyle='->', mutation_scale=20, linewidth=2,
+                                    transform=ax.transAxes, color='black')
+            ax.add_patch(arrow6)
+            
+            # Step 6: Evaluate fitness
+            y_current -= 0.03 + box_height/2
+            box6 = FancyBboxPatch((x_center - box_width/2, y_current - box_height/2),
+                                 box_width, box_height,
+                                 boxstyle="round,pad=0.01",
+                                 facecolor='#3498db', edgecolor='black', linewidth=2,
+                                 transform=ax.transAxes)
+            ax.add_patch(box6)
+            ax.text(x_center, y_current, 'Evaluate fitness(x[i]), Update pbest[i] & gbest',
+                   ha='center', va='center', fontsize=9, color='white', transform=ax.transAxes)
+            
+            # Loop back arrow
+            arrow_loop = FancyArrowPatch((x_center - box_width/2, y_current),
+                                        (x_center - box_width/2 - 0.12, y_current),
+                                        arrowstyle='->', mutation_scale=20, linewidth=2,
+                                        transform=ax.transAxes, color='purple',
+                                        connectionstyle="arc3,rad=.7")
+            ax.add_patch(arrow_loop)
+            ax.text(x_center - box_width/2 - 0.15, y_current + 0.15, 'Next\nIteration',
+                   ha='center', fontsize=9, color='purple', transform=ax.transAxes)
+            
+            # Parameters info box
+            info_text = (
+                "BPSO Parameters:\n"
+                "w = 0.7 (Inertia weight)\n"
+                "c1 = 2.0 (Cognitive coeff.)\n"
+                "c2 = 2.0 (Social coeff.)\n"
+                "N = 30 (Swarm size)\n"
+                "Max Iter = 100"
+            )
+            info_box = FancyBboxPatch((0.02, 0.02), 0.25, 0.18,
+                                     boxstyle="round,pad=0.01",
+                                     facecolor='lightblue', alpha=0.3, edgecolor='black',
+                                     linewidth=1.5, transform=ax.transAxes)
+            ax.add_patch(info_box)
+            ax.text(0.145, 0.11, info_text, ha='center', va='center',
+                   fontsize=8.5, family='monospace', transform=ax.transAxes)
+            
+            ax.set_xlim(0, 1)
+            ax.set_ylim(0, 1)
+            
             self.canvas_bpso_swarm.draw()
             
         except Exception as e:
-            print(f"Error visualizing BPSO swarm: {e}")
+            print(f"Error visualizing BPSO flowchart: {e}")
+            import traceback
+            traceback.print_exc()
+    
     
     def visualize_regional_distribution(self):
         """Visualize regional distribution of selected items"""
