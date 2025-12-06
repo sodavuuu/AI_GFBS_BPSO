@@ -848,37 +848,58 @@ class KnapsackGUIEnhanced(QMainWindow):
             ax3 = fig.add_subplot(2, 2, 3)
             ax4 = fig.add_subplot(2, 2, 4)
             
-            # Regional distribution
+            # Regional distribution (Pie Chart)
             if 'Segment' in selected_data.columns or 'region' in selected_data.columns:
                 region_col = 'Segment' if 'Segment' in selected_data.columns else 'region'
                 region_counts = selected_data[region_col].value_counts()
-                ax1.pie(region_counts.values, labels=region_counts.index, autopct='%1.1f%%', startangle=90)
-                ax1.set_title('Regional Distribution', fontweight='bold')
+                colors = ['#3498db', '#e74c3c', '#2ecc71', '#f39c12']
+                ax1.pie(region_counts.values, labels=region_counts.index, autopct='%1.1f%%', 
+                       startangle=90, colors=colors[:len(region_counts)])
+                ax1.set_title('Regional Distribution', fontweight='bold', fontsize=11)
+            else:
+                # Fallback: show item count
+                ax1.text(0.5, 0.5, f'{len(selected_data)} Items Selected', 
+                        ha='center', va='center', fontsize=14, fontweight='bold')
+                ax1.set_title('Regional Distribution\n(No region data)', fontweight='bold', fontsize=11)
+                ax1.axis('off')
             
-            # Category distribution
+            # Category distribution (Bar Chart)
             if 'Category' in selected_data.columns:
                 cat_counts = selected_data['Category'].value_counts()
-                ax2.bar(range(len(cat_counts)), cat_counts.values)
+                colors = ['#3498db', '#2ecc71', '#e74c3c', '#f39c12']
+                ax2.bar(range(len(cat_counts)), cat_counts.values, color=colors[:len(cat_counts)])
                 ax2.set_xticks(range(len(cat_counts)))
-                ax2.set_xticklabels(cat_counts.index, rotation=45, ha='right')
-                ax2.set_title('Category Distribution', fontweight='bold')
-                ax2.set_ylabel('Count')
+                ax2.set_xticklabels(cat_counts.index, rotation=45, ha='right', fontsize=9)
+                ax2.set_title('Category Distribution', fontweight='bold', fontsize=11)
+                ax2.set_ylabel('Count', fontsize=10)
+                ax2.grid(True, alpha=0.3, axis='y')
+            else:
+                # Fallback: show value/weight stats
+                ax2.bar([0, 1], [selected_data['value'].sum(), selected_data['weight'].sum()], 
+                       color=['#2ecc71', '#e74c3c'])
+                ax2.set_xticks([0, 1])
+                ax2.set_xticklabels(['Total Value', 'Total Weight'], fontsize=9)
+                ax2.set_title('Value vs Weight', fontweight='bold', fontsize=11)
+                ax2.set_ylabel('Total', fontsize=10)
+                ax2.grid(True, alpha=0.3, axis='y')
             
             # Weight vs Value scatter
-            ax3.scatter(selected_data['weight'], selected_data['value'], alpha=0.6, s=100, c='green')
-            ax3.set_xlabel('Weight')
-            ax3.set_ylabel('Value')
-            ax3.set_title('Weight vs Value (Selected Items)', fontweight='bold')
+            ax3.scatter(selected_data['weight'], selected_data['value'], 
+                       alpha=0.6, s=100, c='green', edgecolors='black', linewidth=0.5)
+            ax3.set_xlabel('Weight', fontsize=10)
+            ax3.set_ylabel('Value', fontsize=10)
+            ax3.set_title('Weight vs Value (Selected Items)', fontweight='bold', fontsize=11)
             ax3.grid(True, alpha=0.3)
             
             # Value distribution histogram
-            ax4.hist(selected_data['value'], bins=15, alpha=0.7, color='skyblue', edgecolor='black')
-            ax4.set_xlabel('Value')
-            ax4.set_ylabel('Frequency')
-            ax4.set_title('Value Distribution', fontweight='bold')
+            ax4.hist(selected_data['value'], bins=min(15, len(selected_data)), 
+                    alpha=0.7, color='skyblue', edgecolor='black')
+            ax4.set_xlabel('Value', fontsize=10)
+            ax4.set_ylabel('Frequency', fontsize=10)
+            ax4.set_title('Value Distribution', fontweight='bold', fontsize=11)
             ax4.grid(True, alpha=0.3, axis='y')
             
-            fig.tight_layout()
+            fig.tight_layout(pad=2.0)
             self.canvas_regional.draw()
             
         except Exception as e:
