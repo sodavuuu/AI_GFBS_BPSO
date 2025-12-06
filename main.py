@@ -87,7 +87,11 @@ def main():
     print("3. Outlier (có items bẫy)")
     print("4. Similar Ratio (v/w gần nhau)")
     
-    choice = input("\nNhập lựa chọn (1-4, mặc định 1): ").strip()
+    try:
+        choice = input("\nNhập lựa chọn (1-4, mặc định 1): ").strip()
+    except EOFError:
+        choice = ''
+        print("1")  # Show default choice
     
     dataset_types = {
         '1': 'random',
