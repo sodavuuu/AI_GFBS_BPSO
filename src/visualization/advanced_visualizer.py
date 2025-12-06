@@ -71,13 +71,14 @@ class AdvancedKnapsackVisualizer:
         ax1.set_title('GBFS: Ảnh hưởng Max States đến chất lượng', fontweight='bold', pad=10)  # Shorter, less pad
         ax1.grid(True, alpha=0.3)
         
-        # Thêm annotation cho best value
+        # Thêm annotation cho best value - đặt góc trên bên trái để tránh che
         best_idx = results_df['value'].idxmax()
-        ax1.annotate(f'Tốt nhất: {results_df.loc[best_idx, "value"]:.0f}\n@{results_df.loc[best_idx, "max_states"]} trạng thái',
+        ax1.annotate(f'Tốt nhất: {results_df.loc[best_idx, "value"]:.0f}\n@{results_df.loc[best_idx, "max_states"]} states',
                     xy=(results_df.loc[best_idx, 'max_states'], results_df.loc[best_idx, 'value']),
-                    xytext=(20, 20), textcoords='offset points',
-                    bbox=dict(boxstyle='round,pad=0.5', fc='yellow', alpha=0.7),
-                    arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0'))
+                    xytext=(-80, -30), textcoords='offset points',
+                    bbox=dict(boxstyle='round,pad=0.5', fc='yellow', alpha=0.8),
+                    arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0.3'),
+                    fontsize=9)
         
         # Plot 2: Time vs Max States
         ax2 = fig.add_subplot(gs[0, 1])
@@ -90,12 +91,16 @@ class AdvancedKnapsackVisualizer:
         ax2.set_title('GBFS: Chi phí tính toán vs Max States', fontweight='bold', pad=15)
         ax2.grid(True, alpha=0.3)
         
-        # Plot 3: Efficiency (Value/Time ratio)
+        # Plot 3: Efficiency (Value/Time ratio) - Scale to K (thousands)
         ax3 = fig.add_subplot(gs[1, 0])
-        efficiency = results_df['value'] / results_df['time']
-        ax3.bar(results_df['max_states'], efficiency, color=self.colors['gbfs'], alpha=0.7, edgecolor='black')
+        efficiency = results_df['value'] / results_df['time'] / 1000  # Scale to thousands
+        
+        # Set bar width based on data spacing
+        bar_width = (results_df['max_states'].max() - results_df['max_states'].min()) / len(results_df) * 0.6
+        ax3.bar(results_df['max_states'], efficiency, width=bar_width, 
+                color=self.colors['gbfs'], alpha=0.7, edgecolor='black', linewidth=1.5)
         ax3.set_xlabel('Số trạng thái tối đa', fontweight='bold')
-        ax3.set_ylabel('Hiệu suất (Giá trị/Thời gian)', fontweight='bold')
+        ax3.set_ylabel('Hiệu suất (K Giá trị/s)', fontweight='bold')
         ax3.set_title('GBFS: Phân tích hiệu suất giải pháp', fontweight='bold', pad=15)
         ax3.grid(True, alpha=0.3, axis='y')
         
@@ -109,8 +114,8 @@ class AdvancedKnapsackVisualizer:
              f"{results_df['value'].max() - results_df['value'].min():.0f}"],
             ['Thời gian (s)', f"{results_df['time'].min():.3f}", f"{results_df['time'].max():.3f}", 
              f"{results_df['time'].max() - results_df['time'].min():.3f}"],
-            ['Hiệu suất', f"{efficiency.max():.0f}", f"{efficiency.min():.0f}", 
-             f"{efficiency.max() - efficiency.min():.0f}"]
+            ['Hiệu suất (K)', f"{efficiency.max():.1f}", f"{efficiency.min():.1f}", 
+             f"{efficiency.max() - efficiency.min():.1f}"]
         ]
         
         table = ax4.table(cellText=summary_data, cellLoc='center', loc='center',
