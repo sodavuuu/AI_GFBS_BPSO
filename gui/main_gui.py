@@ -217,13 +217,13 @@ class KnapsackSolverGUI(QMainWindow):
         layout.addWidget(header)
         
         subtitle = QLabel("Multi-Objective 0/1 Knapsack\n"
-                         "f1: Revenue  |  f2: Regional Diversity")
+                         "f1: Doanh thu  |  f2: Đa dạng Khu vực")
         subtitle.setStyleSheet("font-size: 10px; color: #7f8c8d; padding: 3px;")
         subtitle.setAlignment(Qt.AlignCenter)
         layout.addWidget(subtitle)
         
         # === PROBLEM DEFINITION ===
-        problem_group = QGroupBox("Problem Definition")
+        problem_group = QGroupBox("Định nghĩa Bài toán")
         problem_layout = QVBoxLayout()
         
         self.problem_info = QTextEdit()
@@ -242,10 +242,10 @@ class KnapsackSolverGUI(QMainWindow):
         layout.addWidget(problem_group)
         
         # === TEST CASE SELECTION ===
-        testcase_group = QGroupBox("Test Case Selection")
+        testcase_group = QGroupBox("Chọn Trường hợp Kiểm thử")
         testcase_layout = QVBoxLayout()
         
-        testcase_layout.addWidget(QLabel("Select Test Case:"))
+        testcase_layout.addWidget(QLabel("Chọn Trường hợp Kiểm thử:"))
         self.testcase_combo = QComboBox()
         test_cases = self.loader.list_test_cases()
         self.testcase_combo.addItems(test_cases)
@@ -266,13 +266,13 @@ class KnapsackSolverGUI(QMainWindow):
         layout.addWidget(testcase_group)
         
         # === ALGORITHM PARAMETERS ===
-        params_group = QGroupBox("Algorithm Parameters")
+        params_group = QGroupBox("Tham số Thuật toán")
         params_layout = QVBoxLayout()
         
         # GBFS
         params_layout.addWidget(QLabel("GBFS:"))
         gbfs_layout = QHBoxLayout()
-        gbfs_layout.addWidget(QLabel("Max States:"))
+        gbfs_layout.addWidget(QLabel("Trạng thái tối đa:"))
         self.gbfs_max_states = QSpinBox()
         self.gbfs_max_states.setRange(1000, 20000)
         self.gbfs_max_states.setValue(5000)
@@ -284,7 +284,7 @@ class KnapsackSolverGUI(QMainWindow):
         params_layout.addWidget(QLabel("BPSO:"))
         
         bpso_particles_layout = QHBoxLayout()
-        bpso_particles_layout.addWidget(QLabel("Particles:"))
+        bpso_particles_layout.addWidget(QLabel("Số hạt:"))
         self.bpso_particles = QSpinBox()
         self.bpso_particles.setRange(10, 100)
         self.bpso_particles.setValue(30)
@@ -292,7 +292,7 @@ class KnapsackSolverGUI(QMainWindow):
         params_layout.addLayout(bpso_particles_layout)
         
         bpso_iter_layout = QHBoxLayout()
-        bpso_iter_layout.addWidget(QLabel("Iterations:"))
+        bpso_iter_layout.addWidget(QLabel("Số vòng lặp:"))
         self.bpso_iterations = QSpinBox()
         self.bpso_iterations.setRange(10, 200)
         self.bpso_iterations.setValue(50)
@@ -300,7 +300,7 @@ class KnapsackSolverGUI(QMainWindow):
         params_layout.addLayout(bpso_iter_layout)
         
         bpso_w_layout = QHBoxLayout()
-        bpso_w_layout.addWidget(QLabel("Inertia (w):"))
+        bpso_w_layout.addWidget(QLabel("Quán tính (w):"))
         self.bpso_w = QDoubleSpinBox()
         self.bpso_w.setRange(0.1, 1.0)
         self.bpso_w.setValue(0.7)
@@ -312,10 +312,10 @@ class KnapsackSolverGUI(QMainWindow):
         layout.addWidget(params_group)
         
         # === ACTION BUTTONS ===
-        buttons_group = QGroupBox("Actions")
+        buttons_group = QGroupBox("Hành động")
         buttons_layout = QVBoxLayout()
         
-        self.run_all_btn = QPushButton("RUN ALL ALGORITHMS")
+        self.run_all_btn = QPushButton("CHẠY TẤT CẢ THUẬT TOÁN")
         self.run_all_btn.setStyleSheet("""
             background-color: #27ae60;
             color: white;
@@ -325,7 +325,7 @@ class KnapsackSolverGUI(QMainWindow):
         self.run_all_btn.clicked.connect(self.run_all_algorithms)
         buttons_layout.addWidget(self.run_all_btn)
         
-        self.run_chapter3_btn = QPushButton("RUN CHAPTER 3 EXPERIMENTS")
+        self.run_chapter3_btn = QPushButton("CHẠY THÍ NGHIỆM CHƯƠNG 3")
         self.run_chapter3_btn.setStyleSheet("""
             background-color: #e67e22;
             color: white;
@@ -334,7 +334,7 @@ class KnapsackSolverGUI(QMainWindow):
         self.run_chapter3_btn.clicked.connect(self.run_chapter3_experiments)
         buttons_layout.addWidget(self.run_chapter3_btn)
         
-        self.export_btn = QPushButton("EXPORT RESULTS")
+        self.export_btn = QPushButton("XUẤT KẾT QUẢ")
         self.export_btn.setStyleSheet("""
             background-color: #3498db;
             color: white;
@@ -379,13 +379,17 @@ class KnapsackSolverGUI(QMainWindow):
             }
         """)
         
+        # Tab 0: Problem Statement
+        self.tab_problem_statement = self.create_problem_statement_tab()
+        self.tabs.addTab(self.tab_problem_statement, "Bài toán")
+        
         # Tab 1: GBFS Algorithm Flow
         self.tab_gbfs = self.create_gbfs_tab()
-        self.tabs.addTab(self.tab_gbfs, "GBFS Flow")
+        self.tabs.addTab(self.tab_gbfs, "Luồng GBFS")
         
         # Tab 3: BPSO Algorithm
         self.tab_bpso = self.create_bpso_tab()
-        self.tabs.addTab(self.tab_bpso, "BPSO Swarm")
+        self.tabs.addTab(self.tab_bpso, "Bầy đàn BPSO")
         
         # Tab 4: Algorithm Comparison
         self.tab_comparison = self.create_comparison_tab()
@@ -393,7 +397,7 @@ class KnapsackSolverGUI(QMainWindow):
         
         # Tab 5: Regional Analysis
         self.tab_regional = self.create_regional_tab()
-        self.tabs.addTab(self.tab_regional, "Regional")
+        self.tabs.addTab(self.tab_regional, "Khu vực")
         
         # Tab 6: Solution Details
         self.tab_solution = self.create_solution_tab()
@@ -401,7 +405,7 @@ class KnapsackSolverGUI(QMainWindow):
         
         # Tab 7: Chapter 3 Results
         self.tab_chapter3 = self.create_chapter3_tab()
-        self.tabs.addTab(self.tab_chapter3, "Chapter 3")
+        self.tabs.addTab(self.tab_chapter3, "Chương 3")
         
         layout.addWidget(self.tabs)
         
@@ -411,14 +415,201 @@ class KnapsackSolverGUI(QMainWindow):
     # TAB CREATION
     # =========================================================================
     
+    def create_problem_statement_tab(self):
+        """Tab 0: Detailed problem statement and objectives"""
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        layout.setContentsMargins(20, 20, 20, 20)
+        
+        # Create scrollable area for long content
+        from PyQt5.QtWidgets import QScrollArea
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setStyleSheet("QScrollArea { border: none; background-color: white; }")
+        
+        content_widget = QWidget()
+        content_layout = QVBoxLayout(content_widget)
+        content_layout.setSpacing(15)
+        
+        # === TITLE ===
+        title = QLabel("BÀI TOÁN TỐI ƯU HÓA ĐA MỤC TIÊU")
+        title.setStyleSheet("""
+            font-size: 28px;
+            font-weight: bold;
+            color: #2c3e50;
+            padding: 20px;
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                                       stop:0 #3498db, stop:1 #2980b9);
+            color: white;
+            border-radius: 8px;
+        """)
+        title.setAlignment(Qt.AlignCenter)
+        content_layout.addWidget(title)
+        
+        # === PROBLEM DESCRIPTION ===
+        problem_section = QLabel("""
+<div style='background-color: #ecf0f1; padding: 20px; border-radius: 5px; border-left: 5px solid #3498db;'>
+<h2 style='color: #2c3e50; margin-top: 0; font-size: 20px;'>Bài toán Cái túi 0/1 Đa mục tiêu (Multi-Objective 0/1 Knapsack)</h2>
+
+<h3 style='color: #34495e; font-size: 17px;'>Bối cảnh thực tế:</h3>
+<p style='font-size: 15px; line-height: 1.8;'>
+Một công ty logistics cần lựa chọn hàng hóa để vận chuyển trong một chuyến xe với <b>sức chứa giới hạn</b>. 
+Mỗi vật phẩm có <b>trọng lượng</b>, <b>giá trị thương mại</b>, và thuộc về một <b>khu vực địa lý</b> cụ thể.
+</p>
+
+<h3 style='color: #34495e; font-size: 17px;'>Dữ liệu đầu vào:</h3>
+<ul style='font-size: 15px; line-height: 1.8;'>
+<li><b>N vật phẩm</b> (items): Mỗi vật phẩm có:</li>
+<ul>
+    <li>Trọng lượng (weight): w<sub>i</sub></li>
+    <li>Giá trị (value): v<sub>i</sub></li>
+    <li>Khu vực (region): r<sub>i</sub> ∈ {1, 2, 3}</li>
+    <li>Loại hàng (category): Điện tử, Quần áo, Thực phẩm, Nội thất</li>
+</ul>
+<li><b>Sức chứa xe tải</b> (capacity): W</li>
+</ul>
+</div>
+        """)
+        problem_section.setWordWrap(True)
+        problem_section.setTextFormat(Qt.RichText)
+        content_layout.addWidget(problem_section)
+        
+        # === OBJECTIVES ===
+        objectives_section = QLabel("""
+<div style='background-color: #e8f5e9; padding: 20px; border-radius: 5px; border-left: 5px solid #27ae60;'>
+<h2 style='color: #27ae60; margin-top: 0; font-size: 20px;'>MỤC TIÊU TỐI ƯU HÓA (Đồng thời 2 mục tiêu)</h2>
+
+<h3 style='color: #229954; font-size: 17px;'>Mục tiêu 1: Tối đa hóa Tổng giá trị (Maximize Revenue)</h3>
+<p style='font-size: 15px; line-height: 1.8; padding-left: 20px;'>
+<b>Công thức:</b> f₁(x) = Σ(v<sub>i</sub> × x<sub>i</sub>) → MAX<br>
+<b>Ý nghĩa:</b> Tăng doanh thu bằng cách chọn những vật phẩm có giá trị cao<br>
+<b>Trọng số:</b> 70% (ưu tiên chính)
+</p>
+
+<h3 style='color: #229954; font-size: 17px;'>Mục tiêu 2: Tối đa hóa Đa dạng Khu vực (Maximize Regional Diversity)</h3>
+<p style='font-size: 15px; line-height: 1.8; padding-left: 20px;'>
+<b>Công thức:</b> f₂(x) = Số khu vực khác nhau được chọn → MAX<br>
+<b>Ý nghĩa:</b> Phân phối đều hàng hóa từ nhiều khu vực, giảm rủi ro tập trung<br>
+<b>Trọng số:</b> 30% (mục tiêu phụ)<br>
+<b>Lợi ích:</b> Cân bằng nguồn hàng, tăng khả năng phục hồi chuỗi cung ứng
+</p>
+
+<h3 style='color: #c0392b; font-size: 17px;'>Ràng buộc:</h3>
+<p style='font-size: 15px; line-height: 1.8; padding-left: 20px;'>
+<b>Công thức:</b> Σ(w<sub>i</sub> × x<sub>i</sub>) ≤ W<br>
+<b>Ý nghĩa:</b> Tổng trọng lượng không vượt quá sức chứa xe<br>
+<b>Biến quyết định:</b> x<sub>i</sub> ∈ {0, 1} (chọn hoặc không chọn)
+</p>
+</div>
+        """)
+        objectives_section.setWordWrap(True)
+        objectives_section.setTextFormat(Qt.RichText)
+        content_layout.addWidget(objectives_section)
+        
+        # === ALGORITHMS ===
+        algorithms_section = QLabel("""
+<div style='background-color: #fff3e0; padding: 20px; border-radius: 5px; border-left: 5px solid #e67e22;'>
+<h2 style='color: #d35400; margin-top: 0; font-size: 20px;'>CÁC THUẬT TOÁN GIẢI QUYẾT</h2>
+
+<h3 style='color: #d35400; font-size: 17px;'>1. GBFS - Greedy Best-First Search (Tham lam Ưu tiên Tốt nhất)</h3>
+<ul style='font-size: 15px; line-height: 1.8;'>
+<li><b>Ý tưởng:</b> Sắp xếp vật phẩm theo tỷ lệ giá trị/trọng lượng giảm dần, chọn lần lượt</li>
+<li><b>Độ phức tạp:</b> O(n log n)</li>
+<li><b>Ưu điểm:</b> Nhanh, đơn giản, hiệu quả với dữ liệu có tỷ lệ rõ ràng</li>
+<li><b>Nhược điểm:</b> Không đảm bảo tối ưu toàn cục, có thể bỏ sót tổ hợp tốt hơn</li>
+<li><b>Khi nào dùng:</b> Cần kết quả nhanh, dữ liệu lớn, chấp nhận sai số 5-15%</li>
+</ul>
+
+<h3 style='color: #d35400; font-size: 17px;'>2. BPSO - Binary Particle Swarm Optimization (Tối ưu Bầy đàn Nhị phân)</h3>
+<ul style='font-size: 15px; line-height: 1.8;'>
+<li><b>Ý tưởng:</b> Mô phỏng bầy đàn (30 hạt) tìm kiếm song song, học từ kinh nghiệm cá nhân và tập thể</li>
+<li><b>Độ phức tạp:</b> O(particles × iterations × n) ~ O(1500n)</li>
+<li><b>Ưu điểm:</b> Cân bằng khám phá/khai thác, tránh tối ưu cục bộ, xử lý tốt đa mục tiêu</li>
+<li><b>Nhược điểm:</b> Chậm hơn GBFS, cần điều chỉnh tham số (w, c1, c2)</li>
+<li><b>Khi nào dùng:</b> Cần chất lượng cao, dữ liệu phức tạp, có thời gian tính toán</li>
+</ul>
+
+<h3 style='color: #d35400; font-size: 17px;'>3. DP - Dynamic Programming (Quy hoạch Động)</h3>
+<ul style='font-size: 15px; line-height: 1.8;'>
+<li><b>Ý tưởng:</b> Tính toán tất cả trạng thái con, xây dựng bảng dp[n][W]</li>
+<li><b>Độ phức tạp:</b> O(n × W)</li>
+<li><b>Ưu điểm:</b> Đảm bảo tối ưu tuyệt đối cho mục tiêu đơn (giá trị)</li>
+<li><b>Nhược điểm:</b> Chỉ tối ưu f₁, bỏ qua f₂ (regional diversity), chậm với W lớn</li>
+<li><b>Khi nào dùng:</b> Bài toán nhỏ (n < 100, W < 10000), cần nghiệm chuẩn để so sánh</li>
+</ul>
+</div>
+        """)
+        algorithms_section.setWordWrap(True)
+        algorithms_section.setTextFormat(Qt.RichText)
+        content_layout.addWidget(algorithms_section)
+        
+        # === RESEARCH OBJECTIVES ===
+        research_section = QLabel("""
+<div style='background-color: #f3e5f5; padding: 20px; border-radius: 5px; border-left: 5px solid #8e44ad;'>
+<h2 style='color: #8e44ad; margin-top: 0; font-size: 20px;'>MỤC ĐÍCH NGHIÊN CỨU (Chương 3)</h2>
+
+<h3 style='color: #7d3c98; font-size: 17px;'>Phân tích So sánh:</h3>
+<ul style='font-size: 15px; line-height: 1.8;'>
+<li><b>Chất lượng nghiệm:</b> So sánh giá trị đạt được (f₁, f₂) của từng thuật toán</li>
+<li><b>Thời gian thực thi:</b> Đo tốc độ GBFS vs BPSO vs DP</li>
+<li><b>Độ ổn định:</b> Phân tích độ lệch chuẩn qua nhiều lần chạy (BPSO)</li>
+<li><b>Khả năng mở rộng:</b> Kiểm tra hiệu suất với n = {30, 50, 100, 200}</li>
+</ul>
+
+<h3 style='color: #7d3c98; font-size: 17px;'>Điều chỉnh Tham số:</h3>
+<ul style='font-size: 15px; line-height: 1.8;'>
+<li><b>BPSO:</b> Tìm bộ tham số tối ưu (w, c₁, c₂, particles, iterations)</li>
+<li><b>GBFS:</b> Thử nghiệm các chiến lược sắp xếp khác nhau</li>
+<li><b>Trade-off:</b> Phân tích đánh đổi giữa thời gian và chất lượng</li>
+</ul>
+
+<h3 style='color: #7d3c98; font-size: 17px;'>Đặc điểm Dữ liệu:</h3>
+<ul style='font-size: 15px; line-height: 1.8;'>
+<li><b>Phân phối giá trị:</b> Ảnh hưởng của dữ liệu uniform vs skewed</li>
+<li><b>Tương quan w-v:</b> Hiệu quả khi weight và value có/không tương quan</li>
+<li><b>Khu vực:</b> Tác động của số lượng regions đến regional diversity</li>
+</ul>
+
+<h3 style='color: #7d3c98; font-size: 17px;'>Kết luận Kỳ vọng:</h3>
+<ul style='font-size: 15px; line-height: 1.8;'>
+<li>Xác định thuật toán phù hợp với từng kịch bản thực tế</li>
+<li>Đưa ra khuyến nghị cài đặt tham số tối ưu</li>
+<li>Chứng minh giá trị của multi-objective optimization trong logistics</li>
+</ul>
+</div>
+        """)
+        research_section.setWordWrap(True)
+        research_section.setTextFormat(Qt.RichText)
+        content_layout.addWidget(research_section)
+        
+        # Add stretch at the end
+        content_layout.addStretch()
+        
+        scroll.setWidget(content_widget)
+        layout.addWidget(scroll)
+        
+        return tab
+    
     def create_gbfs_tab(self):
         """Tab 2: GBFS algorithm flow"""
         tab = QWidget()
         layout = QVBoxLayout(tab)
         
-        info = QLabel("GBFS Selection Process: Greedy selection by value/weight ratio")
-        info.setStyleSheet("background-color: #e8f5e9; padding: 8px;")
-        layout.addWidget(info)
+        # Explanation section
+        explanation = QLabel("""
+<div style='background-color: #e8f5e9; padding: 15px; border-radius: 5px; border-left: 4px solid #27ae60;'>
+<h3 style='color: #27ae60; margin-top: 0; font-size: 16px;'>Giải thích các biểu đồ GBFS (Tham lam Ưu tiên Tốt nhất):</h3>
+<ul style='font-size: 14px; line-height: 1.8;'>
+<li><b>Biểu đồ 1 - Thứ tự lựa chọn:</b> Hiển thị thứ tự vật phẩm được chọn (số càng nhỏ = chọn càng sớm). Mũi tên nối các điểm theo trình tự chọn. <i>Xanh = đã chọn, Xám = bỏ qua.</i></li>
+<li><b>Biểu đồ 2 - Giá trị từng vật phẩm:</b> Đồ thị đường thể hiện giá trị của từng vật phẩm được chọn theo thứ tự. <i>Cao = vật phẩm giá trị lớn.</i></li>
+<li><b>Biểu đồ 3 - Trọng lượng tích lũy:</b> Đường xanh tăng dần cho thấy trọng lượng cộng dồn. Đường đỏ là giới hạn sức chứa. <i>Diện tích xanh = trọng lượng đã dùng.</i></li>
+<li><b>Biểu đồ 4 - Top 20 vật phẩm theo tỷ lệ:</b> Xếp hạng vật phẩm theo tỷ lệ giá trị/trọng lượng. <i>Xanh = được chọn, Xám = không được chọn (do hết sức chứa).</i></li>
+</ul>
+</div>
+        """)
+        explanation.setWordWrap(True)
+        explanation.setTextFormat(Qt.RichText)
+        layout.addWidget(explanation)
         
         self.gbfs_fig = Figure(figsize=(12, 9), facecolor='white')
         self.gbfs_canvas = FigureCanvas(self.gbfs_fig)
@@ -432,9 +623,21 @@ class KnapsackSolverGUI(QMainWindow):
         tab = QWidget()
         layout = QVBoxLayout(tab)
         
-        info = QLabel("BPSO Convergence & Swarm Behavior")
-        info.setStyleSheet("background-color: #e3f2fd; padding: 8px;")
-        layout.addWidget(info)
+        # Explanation section
+        explanation = QLabel("""
+<div style='background-color: #e3f2fd; padding: 15px; border-radius: 5px; border-left: 4px solid #2196f3;'>
+<h3 style='color: #1976d2; margin-top: 0; font-size: 16px;'>Giải thích các biểu đồ BPSO (Tối ưu Bầy đàn):</h3>
+<ul style='font-size: 14px; line-height: 1.8;'>
+<li><b>Biểu đồ 1 - Hội tụ BPSO:</b> Đường xanh (Độ thích nghi tốt nhất) tăng dần → thuật toán đang tìm được nghiệm tốt hơn. Đường đỏ (Độ thích nghi trung bình) dao động nhiều → bầy đàn đang khám phá. <i>Số cuối cùng = giá trị tốt nhất đạt được.</i></li>
+<li><b>Biểu đồ 2 - Đa dạng Bầy đàn:</b> Biểu đồ tím cho thấy mức độ khác biệt giữa các hạt. <i>Cao = đang khám phá rộng, Thấp = đang hội tụ về nghiệm.</i></li>
+<li><b>Biểu đồ 3 - Không gian Giải pháp:</b> Mỗi điểm xanh = 1 giải pháp tìm được bởi bầy đàn. Sao đỏ = giải pháp tốt nhất toàn cục. <i>Điểm càng phải trên = giá trị càng cao.</i></li>
+</ul>
+<p style='font-size: 13px; color: #555; margin-top: 10px;'><i>💡 Lưu ý: BPSO chạy ngẫu nhiên nên mỗi lần kết quả có thể khác nhau một chút.</i></p>
+</div>
+        """)
+        explanation.setWordWrap(True)
+        explanation.setTextFormat(Qt.RichText)
+        layout.addWidget(explanation)
         
         self.bpso_fig = Figure(figsize=(12, 9), facecolor='white')
         self.bpso_canvas = FigureCanvas(self.bpso_fig)
@@ -448,7 +651,7 @@ class KnapsackSolverGUI(QMainWindow):
         tab = QWidget()
         layout = QVBoxLayout(tab)
         
-        info = QLabel("GBFS vs BPSO vs DP - Performance Comparison")
+        info = QLabel("GBFS vs BPSO vs DP - So sánh Hiệu suất")
         info.setStyleSheet("background-color: #fff3e0; padding: 8px;")
         layout.addWidget(info)
         
@@ -585,10 +788,7 @@ class KnapsackSolverGUI(QMainWindow):
             # Clear previous results
             self.results = {}
             
-            # Visualize problem
-            self.visualize_problem()
-            
-            self.statusBar().showMessage(f'Loaded: {test_name}')
+            self.statusBar().showMessage(f'Đã tải: {test_name}')
             
         except Exception as e:
             import traceback
@@ -606,20 +806,20 @@ class KnapsackSolverGUI(QMainWindow):
 <br>
 <b>Current Test:</b> {test_name}<br>
 <b>Items:</b> {info['N_Items']}<br>
-<b>Capacity:</b> {info['Sức chứa']}<br>
+<b>Capacity:</b> {info['Capacity']}<br>
 <b>Regions:</b> {info['N_Regions']}
 """
         self.problem_info.setHtml(text)
     
     def update_testcase_info(self, info):
         """Update test case info label"""
-        text = f"""Vật phẩm: {info['N_Items']} | Sức chứa: {info['Sức chứa']} | Khu vựcs: {info['N_Regions']} | Tổng giá trị: {int(info['Total_Giá trị'])}"""
+        text = f"""Vật phẩm: {info['N_Items']} | Sức chứa: {info['Capacity']} | Khu vực: {info['N_Regions']} | Tổng giá trị: {int(info['Total_Value'])}"""
         self.testcase_info.setText(text)
     
     def run_all_algorithms(self):
         """Run all three algorithms"""
         if self.current_test_case is None:
-            QMessageBox.warning(self, "Warning", "Please select a test case first!")
+            QMessageBox.warning(self, "Cảnh báo", "Vui lòng chọn trường hợp kiểm thử trước!")
             return
         
         # Disable button and show progress
@@ -1151,7 +1351,7 @@ class KnapsackSolverGUI(QMainWindow):
     def export_results(self):
         """Export results to CSV"""
         if len(self.results) == 0:
-            QMessageBox.warning(self, "Warning", "No results to export!")
+            QMessageBox.warning(self, "Cảnh báo", "Không có kết quả để xuất!")
             return
         
         try:
