@@ -126,8 +126,8 @@ class KnapsackBPSO:
 
 
 def solve_knapsack_bpso(items, weights, values, capacity, 
-                        n_particles=30, max_iterations=100):
+                        n_particles=30, max_iterations=100, w=0.7, c1=2.0, c2=2.0):
     """Run BPSO algorithm"""
     solver = KnapsackBPSO(items, weights, values, capacity, 
-                          n_particles, max_iterations)
+                          n_particles, max_iterations, w, c1, c2)
     return solver.solve()

@@ -82,7 +82,7 @@ class KnapsackGUIEnhanced(QMainWindow):
         layout.setContentsMargins(15, 15, 15, 15)
         
         # ===== HEADER =====
-        title = QLabel("🎒 KNAPSACK SOLVER")
+        title = QLabel("KNAPSACK SOLVER")
         title.setStyleSheet("""
             font-size: 20px; 
             font-weight: bold; 
@@ -102,7 +102,7 @@ class KnapsackGUIEnhanced(QMainWindow):
         layout.addWidget(self._separator())
         
         # ===== PROBLEM DEFINITION =====
-        problem_group = QGroupBox("📋 Problem Definition")
+        problem_group = QGroupBox("Problem Definition")
         problem_group.setStyleSheet("""
             QGroupBox {
                 font-weight: bold;
@@ -135,7 +135,7 @@ class KnapsackGUIEnhanced(QMainWindow):
         layout.addWidget(problem_group)
         
         # ===== TEST CASE SELECTION =====
-        test_group = QGroupBox("📂 Test Case Selection")
+        test_group = QGroupBox("Test Case Selection")
         test_group.setStyleSheet("""
             QGroupBox {
                 font-weight: bold;
@@ -209,7 +209,7 @@ class KnapsackGUIEnhanced(QMainWindow):
         layout.addWidget(test_group)
         
         # ===== ALGORITHM PARAMETERS =====
-        params_group = QGroupBox("⚙️ Algorithm Parameters")
+        params_group = QGroupBox("Algorithm Parameters")
         params_group.setStyleSheet("""
             QGroupBox {
                 font-weight: bold;
@@ -310,7 +310,7 @@ class KnapsackGUIEnhanced(QMainWindow):
         layout.addWidget(params_group)
         
         # ===== RUN BUTTON =====
-        self.run_btn = QPushButton("🚀 RUN ALL ALGORITHMS")
+        self.run_btn = QPushButton("RUN ALL ALGORITHMS")
         self.run_btn.setStyleSheet("""
             QPushButton {
                 background-color: #27ae60;
@@ -379,42 +379,42 @@ class KnapsackGUIEnhanced(QMainWindow):
         self.tab_problem_layout = QVBoxLayout(self.tab_problem)
         self.canvas_problem = MatplotlibCanvas(width=14, height=10)
         self.tab_problem_layout.addWidget(self.canvas_problem)
-        self.tabs.addTab(self.tab_problem, "📍 Problem Visualization")
+        self.tabs.addTab(self.tab_problem, "Problem Visualization")
         
         # Tab 2: BPSO Convergence
         self.tab_convergence = QWidget()
         self.tab_convergence_layout = QVBoxLayout(self.tab_convergence)
         self.canvas_convergence = MatplotlibCanvas(width=14, height=10)
         self.tab_convergence_layout.addWidget(self.canvas_convergence)
-        self.tabs.addTab(self.tab_convergence, "📈 BPSO Convergence")
+        self.tabs.addTab(self.tab_convergence, "BPSO Convergence")
         
         # Tab 3: Algorithm Comparison
         self.tab_comparison = QWidget()
         self.tab_comparison_layout = QVBoxLayout(self.tab_comparison)
         self.canvas_comparison = MatplotlibCanvas(width=14, height=10)
         self.tab_comparison_layout.addWidget(self.canvas_comparison)
-        self.tabs.addTab(self.tab_comparison, "⚖️ Algorithm Comparison")
+        self.tabs.addTab(self.tab_comparison, "Algorithm Comparison")
         
         # Tab 4: GBFS State Tree
         self.tab_gbfs_tree = QWidget()
         self.tab_gbfs_tree_layout = QVBoxLayout(self.tab_gbfs_tree)
         self.canvas_gbfs_tree = MatplotlibCanvas(width=14, height=10)
         self.tab_gbfs_tree_layout.addWidget(self.canvas_gbfs_tree)
-        self.tabs.addTab(self.tab_gbfs_tree, "🌳 GBFS State Tree")
+        self.tabs.addTab(self.tab_gbfs_tree, "GBFS State Tree")
         
         # Tab 5: BPSO Swarm
         self.tab_bpso_swarm = QWidget()
         self.tab_bpso_swarm_layout = QVBoxLayout(self.tab_bpso_swarm)
         self.canvas_bpso_swarm = MatplotlibCanvas(width=14, height=10)
         self.tab_bpso_swarm_layout.addWidget(self.canvas_bpso_swarm)
-        self.tabs.addTab(self.tab_bpso_swarm, "🦠 BPSO Swarm")
+        self.tabs.addTab(self.tab_bpso_swarm, "BPSO Swarm")
         
         # Tab 6: Regional Distribution
         self.tab_regional = QWidget()
         self.tab_regional_layout = QVBoxLayout(self.tab_regional)
         self.canvas_regional = MatplotlibCanvas(width=14, height=10)
         self.tab_regional_layout.addWidget(self.canvas_regional)
-        self.tabs.addTab(self.tab_regional, "🌍 Regional Analysis")
+        self.tabs.addTab(self.tab_regional, "Regional Analysis")
         
         # Tab 7: Selected Items Detail
         self.tab_items = QWidget()
@@ -434,7 +434,7 @@ class KnapsackGUIEnhanced(QMainWindow):
             }
         """)
         self.tab_items_layout.addWidget(self.items_table)
-        self.tabs.addTab(self.tab_items, "📋 Selected Items")
+        self.tabs.addTab(self.tab_items, "Selected Items")
         
         # Tab 8: Solution Details
         self.tab_solution = QWidget()
@@ -457,7 +457,7 @@ class KnapsackGUIEnhanced(QMainWindow):
         """)
         self.tab_solution_layout.addWidget(self.solution_table)
         
-        self.tabs.addTab(self.tab_solution, "📊 Solution Details")
+        self.tabs.addTab(self.tab_solution, "Solution Details")
         
         layout.addWidget(self.tabs)
         
@@ -839,7 +839,7 @@ class KnapsackGUIEnhanced(QMainWindow):
             # Use BPSO result as default
             best_solution = self.results.get('bpso', self.results.get('gbfs', self.results.get('dp')))
             
-            selected_indices = best_solution['selected_items']
+            selected_indices = best_solution['selected_indices']
             selected_data = self.current_test_data.iloc[selected_indices]
             
             # Create subplots
@@ -894,7 +894,7 @@ class KnapsackGUIEnhanced(QMainWindow):
         try:
             # Use BPSO result as default
             best_solution = self.results.get('bpso', self.results.get('gbfs', self.results.get('dp')))
-            selected_indices = best_solution['selected_items']
+            selected_indices = best_solution['selected_indices']
             
             if self.current_test_data is None:
                 # Fallback: use basic data
