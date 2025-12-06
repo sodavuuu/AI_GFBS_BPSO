@@ -309,7 +309,7 @@ class KnapsackGUIEnhanced(QMainWindow):
         params_group.setLayout(params_layout)
         layout.addWidget(params_group)
         
-        # ===== RUN BUTTON =====
+        # ===== RUN BUTTONS =====
         self.run_btn = QPushButton("RUN ALL ALGORITHMS")
         self.run_btn.setStyleSheet("""
             QPushButton {
@@ -330,6 +330,28 @@ class KnapsackGUIEnhanced(QMainWindow):
         """)
         self.run_btn.clicked.connect(self.run_all_algorithms)
         layout.addWidget(self.run_btn)
+        
+        # Chapter 3 Experiments button
+        self.exp_btn = QPushButton("RUN CHAPTER 3 EXPERIMENTS")
+        self.exp_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #e67e22;
+                color: white;
+                font-size: 12px;
+                font-weight: bold;
+                padding: 12px;
+                border-radius: 5px;
+                margin-top: 5px;
+            }
+            QPushButton:hover {
+                background-color: #d35400;
+            }
+            QPushButton:pressed {
+                background-color: #ba4a00;
+            }
+        """)
+        self.exp_btn.clicked.connect(self.run_chapter3_experiments)
+        layout.addWidget(self.exp_btn)
         
         # Progress bar
         self.progress_bar = QProgressBar()
@@ -458,6 +480,41 @@ class KnapsackGUIEnhanced(QMainWindow):
         self.tab_solution_layout.addWidget(self.solution_table)
         
         self.tabs.addTab(self.tab_solution, "Solution Details")
+        
+        # Tab 9: Chapter 3 Experiments Results
+        self.tab_experiments = QWidget()
+        self.tab_experiments_layout = QVBoxLayout(self.tab_experiments)
+        
+        # Experiments info and load button
+        exp_header = QHBoxLayout()
+        exp_info = QLabel("Chapter 3 Experiment Results (CSV Data)")
+        exp_info.setStyleSheet("font-weight: bold; font-size: 12px;")
+        exp_header.addWidget(exp_info)
+        
+        self.load_csv_btn = QPushButton("Load Results from CSV")
+        self.load_csv_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #3498db;
+                color: white;
+                padding: 8px 15px;
+                border-radius: 3px;
+                font-size: 11px;
+            }
+            QPushButton:hover {
+                background-color: #2980b9;
+            }
+        """)
+        self.load_csv_btn.clicked.connect(self.load_experiment_results)
+        exp_header.addWidget(self.load_csv_btn)
+        exp_header.addStretch()
+        
+        self.tab_experiments_layout.addLayout(exp_header)
+        
+        # Experiments canvas
+        self.canvas_experiments = MatplotlibCanvas(width=14, height=10)
+        self.tab_experiments_layout.addWidget(self.canvas_experiments)
+        
+        self.tabs.addTab(self.tab_experiments, "Chapter 3 Experiments")
         
         layout.addWidget(self.tabs)
         
@@ -1002,6 +1059,344 @@ class KnapsackGUIEnhanced(QMainWindow):
             print(f"Error populating items table: {e}")
             import traceback
             traceback.print_exc()
+    
+    def run_chapter3_experiments(self):
+        """Run all Chapter 3 experiments"""
+        reply = QMessageBox.question(
+            self, 
+            'Run Chapter 3 Experiments',
+            'This will run all experiments for Chapter 3 (3.1.1, 3.1.2, 3.1.3).\n'
+            'This may take several minutes.\n\n'
+            'Continue?',
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+        
+        if reply == QMessageBox.No:
+            return
+        
+        # Create progress dialog
+        progress = QProgressDialog("Running Chapter 3 Experiments...", "Cancel", 0, 6, self)
+        progress.setWindowTitle("Experiments Progress")
+        progress.setWindowModality(Qt.WindowModal)
+        progress.setMinimumDuration(0)
+        progress.setValue(0)
+        
+        try:
+            # Import experiments module
+            import sys
+            import os
+            exp_path = os.path.join(os.path.dirname(__file__), 'experiment')
+            if exp_path not in sys.path:
+                sys.path.insert(0, exp_path)
+            
+            from chapter3_experiments_v2 import Chapter3Experiments
+            
+            experiments = Chapter3Experiments()
+            
+            # Run experiments
+            progress.setLabelText("Running 3.1.1.a: GBFS Parameters...")
+            progress.setValue(1)
+            QApplication.processEvents()
+            if progress.wasCanceled():
+                QMessageBox.information(self, "Cancelled", "Experiments cancelled.")
+                return
+            try:
+                experiments.experiment_3_1_1_a_gbfs_parameters()
+            except Exception as e:
+                QMessageBox.warning(self, "Error", f"3.1.1.a failed: {str(e)}\nContinuing...")
+            
+            progress.setLabelText("Running 3.1.1.b: BPSO Swarm Size...")
+            progress.setValue(2)
+            QApplication.processEvents()
+            if progress.wasCanceled():
+                QMessageBox.information(self, "Cancelled", "Experiments cancelled.")
+                return
+            try:
+                experiments.experiment_3_1_1_b_bpso_swarm_size()
+            except Exception as e:
+                QMessageBox.warning(self, "Error", f"3.1.1.b failed: {str(e)}\nContinuing...")
+            
+            progress.setLabelText("Running 3.1.1.c: BPSO Iterations...")
+            progress.setValue(3)
+            QApplication.processEvents()
+            if progress.wasCanceled():
+                QMessageBox.information(self, "Cancelled", "Experiments cancelled.")
+                return
+            try:
+                experiments.experiment_3_1_1_c_bpso_iterations()
+            except Exception as e:
+                QMessageBox.warning(self, "Error", f"3.1.1.c failed: {str(e)}\nContinuing...")
+            
+            progress.setLabelText("Running 3.1.2: Algorithm Comparison (Single)...")
+            progress.setValue(4)
+            QApplication.processEvents()
+            if progress.wasCanceled():
+                QMessageBox.information(self, "Cancelled", "Experiments cancelled.")
+                return
+            try:
+                experiments.experiment_3_1_2_algorithm_comparison_single('Size Medium 50')
+            except Exception as e:
+                QMessageBox.warning(self, "Error", f"3.1.2 single failed: {str(e)}\nContinuing...")
+            
+            progress.setLabelText("Running 3.1.2: Algorithm Comparison (All)...")
+            progress.setValue(5)
+            QApplication.processEvents()
+            if progress.wasCanceled():
+                QMessageBox.information(self, "Cancelled", "Experiments cancelled.")
+                return
+            try:
+                experiments.experiment_3_1_2_algorithm_comparison_all()
+            except Exception as e:
+                QMessageBox.warning(self, "Error", f"3.1.2 all failed: {str(e)}\nContinuing...")
+            
+            progress.setValue(6)
+            progress.setLabelText("Experiments completed!")
+            
+            QMessageBox.information(
+                self,
+                "Experiments Completed",
+                "All Chapter 3 experiments completed!\n\n"
+                "Results saved to: results/chapter3/\n\n"
+                "Loading results..."
+            )
+            
+            # Auto-load results
+            self.load_experiment_results()
+            
+        except Exception as e:
+            QMessageBox.critical(
+                self,
+                "Experiment Error",
+                f"Failed to run experiments:\n{str(e)}\n\n"
+                "Check console for details."
+            )
+            import traceback
+            traceback.print_exc()
+        finally:
+            progress.close()
+    
+    def load_experiment_results(self):
+        """Load and visualize experiment results from CSV"""
+        try:
+            import os
+            results_dir = 'results/chapter3'
+            
+            if not os.path.exists(results_dir):
+                QMessageBox.warning(
+                    self,
+                    "No Results",
+                    f"Results directory not found: {results_dir}\n\n"
+                    "Please run experiments first."
+                )
+                return
+            
+            # Find CSV files
+            csv_files = [f for f in os.listdir(results_dir) if f.endswith('.csv')]
+            
+            if not csv_files:
+                QMessageBox.warning(
+                    self,
+                    "No Results",
+                    "No CSV result files found.\n\n"
+                    "Please run experiments first."
+                )
+                return
+            
+            # Let user choose which result to view
+            result_file, ok = QInputDialog.getItem(
+                self,
+                "Select Result File",
+                "Choose experiment result to visualize:",
+                csv_files,
+                0,
+                False
+            )
+            
+            if not ok:
+                return
+            
+            # Load and visualize
+            filepath = os.path.join(results_dir, result_file)
+            df = pd.read_csv(filepath)
+            
+            fig = self.canvas_experiments.fig
+            fig.clear()
+            
+            # Visualize based on file type
+            if '3_1_1' in result_file:
+                # Parameter analysis
+                self.visualize_parameter_analysis(df, fig, result_file)
+            elif '3_1_2' in result_file:
+                # Algorithm comparison
+                self.visualize_algorithm_comparison_csv(df, fig, result_file)
+            elif '3_1_3' in result_file:
+                # Data characteristics
+                self.visualize_data_characteristics(df, fig, result_file)
+            else:
+                # Generic table view
+                ax = fig.add_subplot(111)
+                ax.axis('tight')
+                ax.axis('off')
+                table_data = df.head(20).values
+                table = ax.table(cellText=table_data, colLabels=df.columns,
+                               cellLoc='center', loc='center')
+                table.auto_set_font_size(False)
+                table.set_fontsize(8)
+                table.scale(1, 2)
+                ax.set_title(f'Results: {result_file}', fontsize=14, fontweight='bold', pad=20)
+            
+            fig.tight_layout()
+            self.canvas_experiments.draw()
+            
+            # Switch to experiments tab
+            self.tabs.setCurrentWidget(self.tab_experiments)
+            
+        except Exception as e:
+            QMessageBox.critical(
+                self,
+                "Load Error",
+                f"Failed to load results:\n{str(e)}"
+            )
+            import traceback
+            traceback.print_exc()
+    
+    def visualize_parameter_analysis(self, df, fig, filename):
+        """Visualize parameter impact - GA_TSP style"""
+        ax = fig.add_subplot(111)
+        
+        # Auto-detect column names (handle both formats)
+        value_col = 'value' if 'value' in df.columns else 'avg_value'
+        value_std_col = 'value_std' if 'value_std' in df.columns else 'std_value'
+        
+        if 'gbfs' in filename.lower():
+            # GBFS: max_states
+            param_col = 'max_states'
+            ax.plot(df[param_col], df[value_col], 'b-o', linewidth=2, markersize=8, label='Value')
+            if value_std_col in df.columns:
+                ax.fill_between(df[param_col], 
+                               df[value_col] - df[value_std_col], 
+                               df[value_col] + df[value_std_col],
+                               alpha=0.2, color='blue')
+            ax.set_xlabel('Max States', fontsize=12, fontweight='bold')
+            ax.set_ylabel('Solution Value', fontsize=12, fontweight='bold')
+            ax.set_title('GBFS Parameter Impact', fontsize=14, fontweight='bold')
+        
+        elif 'swarm' in filename.lower():
+            # BPSO: swarm size
+            param_col = 'param_value' if 'param_value' in df.columns else 'n_particles'
+            ax.plot(df[param_col], df[value_col], 'r-s', linewidth=2, markersize=8, label='Value')
+            if value_std_col in df.columns:
+                ax.fill_between(df[param_col],
+                               df[value_col] - df[value_std_col],
+                               df[value_col] + df[value_std_col],
+                               alpha=0.2, color='red')
+            ax.set_xlabel('Swarm Size', fontsize=12, fontweight='bold')
+            ax.set_ylabel('Solution Value', fontsize=12, fontweight='bold')
+            ax.set_title('BPSO Parameter Impact: Swarm Size', fontsize=14, fontweight='bold')
+        
+        elif 'iteration' in filename.lower():
+            # BPSO: iterations
+            param_col = 'param_value' if 'param_value' in df.columns else 'max_iterations'
+            ax.plot(df[param_col], df[value_col], 'g-^', linewidth=2, markersize=8, label='Value')
+            if value_std_col in df.columns:
+                ax.fill_between(df[param_col],
+                               df[value_col] - df[value_std_col],
+                               df[value_col] + df[value_std_col],
+                               alpha=0.2, color='green')
+            ax.set_xlabel('Max Iterations', fontsize=12, fontweight='bold')
+            ax.set_ylabel('Solution Value', fontsize=12, fontweight='bold')
+            ax.set_title('BPSO Parameter Impact: Iterations', fontsize=14, fontweight='bold')
+        
+        ax.legend()
+        ax.grid(True, alpha=0.3)
+    
+    def visualize_algorithm_comparison_csv(self, df, fig, filename):
+        """Visualize algorithm comparison - GA_TSP style"""
+        # Create 2x2 subplots
+        ax1 = fig.add_subplot(2, 2, 1)
+        ax2 = fig.add_subplot(2, 2, 2)
+        ax3 = fig.add_subplot(2, 2, 3)
+        ax4 = fig.add_subplot(2, 2, 4)
+        
+        # Auto-detect column names (try all possible formats)
+        if 'value' in df.columns:
+            value_col = 'value'
+        elif 'value_mean' in df.columns:
+            value_col = 'value_mean'
+        elif 'avg_value' in df.columns:
+            value_col = 'avg_value'
+        else:
+            value_col = df.columns[1]  # Assume 2nd column
+        
+        if 'time' in df.columns:
+            time_col = 'time'
+        elif 'time_mean' in df.columns:
+            time_col = 'time_mean'
+        elif 'avg_time' in df.columns:
+            time_col = 'avg_time'
+        else:
+            time_col = None
+        
+        # Extract algorithm data
+        if 'algorithm' in df.columns:
+            algorithms = df['algorithm'].unique()
+            values = [df[df['algorithm'] == alg][value_col].mean() for alg in algorithms]
+            times = [df[df['algorithm'] == alg][time_col].mean() for alg in algorithms] if time_col else [1e-6] * len(algorithms)
+        else:
+            # Fallback: assume first 3 rows
+            algorithms = ['GBFS', 'BPSO', 'DP']
+            values = df[value_col].head(3).tolist() if len(df) >= 3 else df[value_col].tolist()
+            times = df[time_col].head(3).tolist() if time_col and len(df) >= 3 else [1e-6] * len(values)
+        
+        colors = ['#3498db', '#e74c3c', '#2ecc71']
+        
+        # Plot 1: Value
+        ax1.bar(algorithms, values, color=colors[:len(algorithms)])
+        ax1.set_title('Solution Value', fontweight='bold', fontsize=11)
+        ax1.set_ylabel('Value')
+        ax1.grid(True, alpha=0.3, axis='y')
+        
+        # Plot 2: Time
+        ax2.bar(algorithms, times, color=colors[:len(algorithms)])
+        ax2.set_title('Execution Time', fontweight='bold', fontsize=11)
+        ax2.set_ylabel('Time (s)')
+        ax2.grid(True, alpha=0.3, axis='y')
+        
+        # Plot 3: Efficiency
+        efficiency = [v/max(t, 1e-6) for v, t in zip(values, times)]  # Prevent div by zero
+        ax3.bar(algorithms, efficiency, color=colors[:len(algorithms)])
+        ax3.set_title('Efficiency (Value/Time)', fontweight='bold', fontsize=11)
+        ax3.set_ylabel('Efficiency')
+        ax3.grid(True, alpha=0.3, axis='y')
+        
+        # Plot 4: Summary
+        summary = "Algorithm Comparison\n" + "="*22 + "\n\n"
+        for i, alg in enumerate(algorithms):
+            summary += f"{alg}:\n"
+            summary += f"  Value: {values[i]:.2f}\n"
+            summary += f"  Time:  {times[i]:.4f}s\n"
+            summary += f"  Eff:   {efficiency[i]:.2f}\n\n"
+        ax4.text(0.05, 0.95, summary, fontsize=9, family='monospace', 
+                va='top', transform=ax4.transAxes)
+        ax4.axis('off')
+    
+    def visualize_data_characteristics(self, df, fig, filename):
+        """Visualize data characteristics impact"""
+        ax = fig.add_subplot(111)
+        
+        if 'correlation' in df.columns:
+            # Group by correlation level
+            for alg in df['algorithm'].unique() if 'algorithm' in df.columns else ['GBFS', 'BPSO', 'DP']:
+                alg_data = df[df['algorithm'] == alg] if 'algorithm' in df.columns else df
+                ax.plot(alg_data['correlation'], alg_data['avg_value'], 'o-', 
+                       label=alg, linewidth=2, markersize=8)
+            
+            ax.set_xlabel('Correlation (w, v)', fontsize=12, fontweight='bold')
+            ax.set_ylabel('Average Value', fontsize=12, fontweight='bold')
+            ax.set_title('Data Characteristics: Correlation Impact', fontsize=14, fontweight='bold')
+            ax.legend()
+            ax.grid(True, alpha=0.3)
 
 
 def main():
