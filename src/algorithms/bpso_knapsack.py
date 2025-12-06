@@ -1,8 +1,16 @@
 """
 =================================================================================
-BPSO (Binary Particle Swarm Optimization) for Knapsack Problem
+BPSO (Binary Particle Swarm Optimization) for Multi-Objective Knapsack
 =================================================================================
 Population-based metaheuristic using swarm intelligence
+
+MULTI-OBJECTIVE FITNESS (Weighted Sum Method):
+  fitness = alpha * f1_normalized + (1-alpha) * f2_normalized - penalty
+  
+  f1 = Total Revenue (maximize)
+  f2 = Region Coverage (maximize, 0-4 regions)
+  alpha = 0.7 (revenue weight)
+  penalty = 10.0 * overflow_ratio if over capacity
 =================================================================================
 """
 
@@ -12,10 +20,11 @@ import time
 
 
 class KnapsackBPSO:
-    """BPSO implementation"""
+    """BPSO implementation with Multi-Objective fitness"""
     
-    def __init__(self, items, weights, values, capacity,
-                 n_particles=30, max_iterations=100, w=0.7, c1=1.5, c2=1.5):
+    def __init__(self, items, weights, values, capacity, regions=None,
+                 n_particles=30, max_iterations=100, w=0.7, c1=2.0, c2=2.0,
+                 alpha=0.7):
         self.items = items
         self.weights = np.array(weights, dtype=float)
         self.values = np.array(values, dtype=float)
@@ -26,6 +35,18 @@ class KnapsackBPSO:
         self.w = w
         self.c1 = c1
         self.c2 = c2
+        self.alpha = alpha  # Weight for revenue objective
+        
+        # Region data for coverage objective
+        if regions is None:
+            self.regions = [None] * self.n
+            self.max_regions = 1  # No region data
+        else:
+            self.regions = regions
+            self.max_regions = len(set([r for r in regions if r is not None]))
+        
+        # Normalization bounds (updated during optimization)
+        self.max_value = np.sum(self.values)  # Theoretical max revenue
         
         # Convergence tracking
         self.best_fitness_history = []
@@ -34,15 +55,39 @@ class KnapsackBPSO:
         self.particle_history = []  # List of (iteration, positions, gbest_pos)
     
     def evaluate_fitness(self, position):
-        """Fitness with penalty for overweight"""
-        total_value = np.sum(self.values * position)
-        total_weight = np.sum(self.weights * position)
+        """
+        Multi-Objective Fitness with Weighted Sum Method
         
-        if total_weight <= self.capacity:
-            return total_value
+        fitness = alpha * f1_norm + (1-alpha) * f2_norm - penalty
+        
+        f1 = Total Revenue (normalized to 0-1)
+        f2 = Region Coverage (normalized to 0-1, max=4 regions)
+        penalty = 10.0 * overflow_ratio if exceeds capacity
+        """
+        # Objective 1: Total Revenue
+        total_value = np.sum(self.values * position)
+        f1_normalized = total_value / self.max_value if self.max_value > 0 else 0
+        
+        # Objective 2: Region Coverage (number of unique regions)
+        selected_indices = np.where(position == 1)[0]
+        if len(selected_indices) > 0 and self.regions[0] is not None:
+            selected_regions = set([self.regions[i] for i in selected_indices])
+            region_coverage = len(selected_regions)
         else:
+            region_coverage = 0
+        f2_normalized = region_coverage / self.max_regions if self.max_regions > 0 else 0
+        
+        # Weighted Sum
+        fitness = self.alpha * f1_normalized + (1 - self.alpha) * f2_normalized
+        
+        # Penalty for exceeding capacity
+        total_weight = np.sum(self.weights * position)
+        if total_weight > self.capacity:
             overflow = total_weight - self.capacity
-            return total_value - 1000 * overflow
+            penalty_ratio = overflow / self.capacity
+            fitness -= 10.0 * penalty_ratio  # Heavy penalty (beta=10.0)
+        
+        return fitness
     
     def solve(self):
         """Run BPSO optimization"""
@@ -111,11 +156,23 @@ class KnapsackBPSO:
         
         # Build solution
         selected = np.where(gbest_position == 1)[0]
+        
+        # Calculate region coverage
+        if self.regions[0] is not None:
+            selected_regions = set([self.regions[i] for i in selected])
+            region_coverage = len(selected_regions)
+            regions_covered = list(selected_regions)
+        else:
+            region_coverage = 0
+            regions_covered = []
+        
         return {
             'selected_items': [self.items[i] for i in selected],
             'selected_indices': selected.tolist(),
             'total_value': np.sum(self.values[selected]),
             'total_weight': np.sum(self.weights[selected]),
+            'region_coverage': region_coverage,
+            'regions_covered': regions_covered,
             'execution_time': elapsed,
             'convergence': {
                 'best_fitness': self.best_fitness_history,
@@ -125,9 +182,16 @@ class KnapsackBPSO:
         }
 
 
-def solve_knapsack_bpso(items, weights, values, capacity, 
-                        n_particles=30, max_iterations=100, w=0.7, c1=2.0, c2=2.0):
-    """Run BPSO algorithm"""
-    solver = KnapsackBPSO(items, weights, values, capacity, 
-                          n_particles, max_iterations, w, c1, c2)
+def solve_knapsack_bpso(items, weights, values, capacity, regions=None,
+                        n_particles=30, max_iterations=100, w=0.7, c1=2.0, c2=2.0,
+                        alpha=0.7):
+    """
+    Run BPSO algorithm with Multi-Objective fitness
+    
+    Args:
+        regions: List of region names for each item (for coverage objective)
+        alpha: Weight for revenue objective (default 0.7)
+    """
+    solver = KnapsackBPSO(items, weights, values, capacity, regions,
+                          n_particles, max_iterations, w, c1, c2, alpha)
     return solver.solve()

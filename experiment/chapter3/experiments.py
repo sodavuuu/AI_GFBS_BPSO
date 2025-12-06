@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 import time
 from src.utils import TestCaseLoader
-from src.algorithms import solve_knapsack_gbfs, solve_knapsack_bpso, solve_knapsack_dp
+from src.algorithms import solve_knapsack_gbfs, solve_knapsack_bpso
 from src.visualization import AdvancedKnapsackVisualizer
 
 
@@ -72,7 +72,8 @@ class Chapter3Experiments:
                     test_case_run['items'], 
                     test_case_run['weights'], 
                     test_case_run['values'], 
-                    test_case_run['capacity'], 
+                    test_case_run['capacity'],
+                    regions=test_case_run.get('regions'),
                     max_states=max_states
                 )
                 runs.append(result)
@@ -306,8 +307,8 @@ class Chapter3Experiments:
     
     def experiment_3_1_2_algorithm_comparison_single(self, test_case_name='Size Medium 50'):
         """
-        So sánh chi tiết GBFS vs BPSO vs DP trên 1 test case
-        Tương tự GA_TSP so sánh mutations/crossovers
+        So sánh chi tiết GBFS vs BPSO trên 1 test case
+        Theo đúng yêu cầu đề tài: Chỉ 2 thuật toán (GBFS và BPSO)
         """
         print("\n" + "="*70)
         print(f"3.1.2: ALGORITHM COMPARISON - {test_case_name}")
@@ -344,42 +345,31 @@ class Chapter3Experiments:
         bpso_best = max(bpso_runs, key=lambda x: x['total_value'])
         print(f"→ BPSO Best: {bpso_best['total_value']}\n")
         
-        # DP - 1 run (deterministic)
-        print("Running DP...")
-        dp_result = solve_knapsack_dp(items, weights, values, capacity)
-        print(f"  DP: Value={dp_result['total_value']}, Time={dp_result['execution_time']:.4f}s")
-        print(f"→ DP (Optimal): {dp_result['total_value']}\n")
-        
-        # Generate comparison visualization
+        # Generate comparison visualization (GBFS vs BPSO only)
         fig_path = os.path.join(self.output_dir, f'3_1_2_comparison_{test_case_name.replace(" ", "_")}.png')
-        self.visualizer.plot_algorithm_comparison_detailed(
-            gbfs_best, bpso_best, dp_result, save_path=fig_path
+        self.visualizer.plot_algorithm_comparison_gbfs_bpso(
+            gbfs_best, bpso_best, save_path=fig_path
         )
         print(f"✓ Saved Chart: {fig_path}")
         
-        # Summary CSV
+        # Summary CSV (GBFS vs BPSO only)
+        gbfs_mean = np.mean([r['total_value'] for r in gbfs_runs])
+        bpso_mean = np.mean([r['total_value'] for r in bpso_runs])
+        
         summary = {
-            'algorithm': ['GBFS', 'BPSO', 'DP'],
-            'value_mean': [
-                np.mean([r['total_value'] for r in gbfs_runs]),
-                np.mean([r['total_value'] for r in bpso_runs]),
-                dp_result['total_value']
-            ],
+            'algorithm': ['GBFS', 'BPSO'],
+            'value_mean': [gbfs_mean, bpso_mean],
             'value_std': [
                 np.std([r['total_value'] for r in gbfs_runs]),
-                np.std([r['total_value'] for r in bpso_runs]),
-                0
+                np.std([r['total_value'] for r in bpso_runs])
             ],
+            'value_best': [gbfs_best['total_value'], bpso_best['total_value']],
             'time_mean': [
                 np.mean([r['execution_time'] for r in gbfs_runs]),
-                np.mean([r['execution_time'] for r in bpso_runs]),
-                dp_result['execution_time']
+                np.mean([r['execution_time'] for r in bpso_runs])
             ],
-            'pct_optimal': [
-                (np.mean([r['total_value'] for r in gbfs_runs]) / dp_result['total_value']) * 100,
-                (np.mean([r['total_value'] for r in bpso_runs]) / dp_result['total_value']) * 100,
-                100.0
-            ]
+            'better_algorithm': 'GBFS' if gbfs_mean > bpso_mean else 'BPSO',
+            'improvement_pct': abs((gbfs_mean - bpso_mean) / min(gbfs_mean, bpso_mean)) * 100
         }
         
         df = pd.DataFrame(summary)
@@ -419,26 +409,28 @@ class Chapter3Experiments:
             bpso_values = [r['total_value'] for r in bpso_runs]
             bpso_times = [r['execution_time'] for r in bpso_runs]
             
-            # DP
-            dp_r = solve_knapsack_dp(items, weights, values, capacity)
+            # Determine better algorithm
+            gbfs_mean = np.mean(gbfs_values)
+            bpso_mean = np.mean(bpso_values)
+            better_algo = 'GBFS' if gbfs_mean > bpso_mean else 'BPSO'
             
             results.append({
                 'test_case': test_name,
                 'n_items': len(items),
                 'capacity': capacity,
-                'gbfs_value': np.mean(gbfs_values),
+                'gbfs_value': gbfs_mean,
+                'gbfs_value_std': np.std(gbfs_values),
                 'gbfs_time': np.mean(gbfs_times),
-                'bpso_value': np.mean(bpso_values),
+                'bpso_value': bpso_mean,
+                'bpso_value_std': np.std(bpso_values),
                 'bpso_time': np.mean(bpso_times),
-                'dp_value': dp_r['total_value'],
-                'dp_time': dp_r['execution_time'],
-                'gbfs_pct_optimal': (np.mean(gbfs_values) / dp_r['total_value']) * 100,
-                'bpso_pct_optimal': (np.mean(bpso_values) / dp_r['total_value']) * 100
+                'better_algorithm': better_algo,
+                'improvement_pct': abs((gbfs_mean - bpso_mean) / min(gbfs_mean, bpso_mean)) * 100
             })
             
-            print(f"  GBFS: {np.mean(gbfs_values):.1f} ({(np.mean(gbfs_values)/dp_r['total_value'])*100:.1f}%)")
-            print(f"  BPSO: {np.mean(bpso_values):.1f} ({(np.mean(bpso_values)/dp_r['total_value'])*100:.1f}%)")
-            print(f"  DP:   {dp_r['total_value']:.1f} (100%)")
+            print(f"  GBFS: {gbfs_mean:.1f} ± {np.std(gbfs_values):.1f}")
+            print(f"  BPSO: {bpso_mean:.1f} ± {np.std(bpso_values):.1f}")
+            print(f"  → Better: {better_algo}")
         
         df = pd.DataFrame(results)
         csv_path = os.path.join(self.output_dir, '3_1_2_comparison_all_testcases.csv')
@@ -500,29 +492,26 @@ class Chapter3Experiments:
             bpso_best = max(bpso_runs, key=lambda x: x['total_value'])
             print(f"Mean={np.mean(bpso_values):.1f}")
             
-            print("  DP...", end=" ")
-            dp_r = solve_knapsack_dp(items, weights, values, capacity)
-            print(f"Value={dp_r['total_value']}")
-            
-            # Store for visualization
+            # Store for visualization (GBFS vs BPSO only)
             results_dict[group_name] = {
                 'gbfs': gbfs_best,
-                'bpso': bpso_best,
-                'dp': dp_r
+                'bpso': bpso_best
             }
+            
+            # Determine better algorithm
+            gbfs_mean = np.mean(gbfs_values)
+            bpso_mean = np.mean(bpso_values)
             
             # Add to summary
             summary_list.append({
                 'characteristic': group_name,
                 'test_case': test_name,
-                'gbfs_value': np.mean(gbfs_values),
+                'gbfs_value': gbfs_mean,
                 'gbfs_time': np.mean(gbfs_times),
-                'bpso_value': np.mean(bpso_values),
+                'bpso_value': bpso_mean,
                 'bpso_time': np.mean(bpso_times),
-                'dp_value': dp_r['total_value'],
-                'dp_time': dp_r['execution_time'],
-                'gbfs_pct_optimal': (np.mean(gbfs_values) / dp_r['total_value']) * 100,
-                'bpso_pct_optimal': (np.mean(bpso_values) / dp_r['total_value']) * 100
+                'better_algorithm': 'GBFS' if gbfs_mean > bpso_mean else 'BPSO',
+                'improvement_pct': abs((gbfs_mean - bpso_mean) / min(gbfs_mean, bpso_mean)) * 100
             })
         
         # Save CSV

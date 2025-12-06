@@ -1,8 +1,8 @@
 # 🎒 Knapsack Solver - Multi-Objective Optimization
 
-**Version 2.0** | **GBFS + BPSO + DP** | **Unified GUI** | **Chapter 3 Analysis**
+**Version 2.0** | **GBFS + BPSO** | **Unified GUI** | **Chapter 3 Analysis**
 
-A comprehensive implementation of three algorithms for solving the Multi-Objective 0/1 Knapsack Problem with interactive GUI and experimental analysis.
+A comprehensive implementation of two algorithms for solving the Multi-Objective 0/1 Knapsack Problem with interactive GUI and experimental analysis.
 
 ---
 
@@ -24,11 +24,6 @@ A comprehensive implementation of three algorithms for solving the Multi-Objecti
    - Metaheuristic search algorithm
    - Population-based optimization
    - Good balance between exploration and exploitation
-
-3. **DP** (Dynamic Programming)
-   - Optimal solution guaranteed
-   - Classical approach
-   - O(n × capacity) complexity
 
 ---
 
@@ -72,8 +67,7 @@ AI_GFBS_BPSO/
 ├── src/                    # Source Code
 │   ├── algorithms/        # Algorithm Implementations
 │   │   ├── gbfs_knapsack.py
-│   │   ├── bpso_knapsack.py
-│   │   └── dp_knapsack.py
+│   │   └── bpso_knapsack.py
 │   ├── utils/             # Utilities
 │   │   └── test_case_loader.py
 │   └── visualization/     # Visualization
@@ -311,7 +305,6 @@ Copyright (c) 2025 Ha Phuong Quynh
 
 ## 🙏 Acknowledgments
 
-- Inspired by GA_TSP project structure
 - PyQt5 for GUI framework
 - Matplotlib/Seaborn for visualizations
 - NumPy/Pandas for data processing

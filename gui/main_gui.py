@@ -21,9 +21,14 @@ Algorithms:
 """
 
 import sys
+import os
 import numpy as np
 import pandas as pd
 from pathlib import Path
+
+# Add project root to path for imports
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
 
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
@@ -43,7 +48,7 @@ import seaborn as sns
 
 # Import algorithms and visualizers
 from src.utils import TestCaseLoader
-from src.algorithms import solve_knapsack_gbfs, solve_knapsack_bpso, solve_knapsack_dp
+from src.algorithms import solve_knapsack_gbfs, solve_knapsack_bpso
 from src.visualization import (
     visualize_gbfs_selection_steps,
     visualize_bpso_swarm_behavior
@@ -71,27 +76,28 @@ class AlgorithmWorker(QThread):
         try:
             self.progress.emit(f"Running {self.algorithm}...")
             
-            # Extract item names, weights, values
+            # Extract item names, weights, values, regions
             item_names = [item['name'] for item in self.items]
             weights = [item['weight'] for item in self.items]
             values = [item['value'] for item in self.items]
+            regions = [item.get('region') for item in self.items]  # May be None
             
             if self.algorithm == "GBFS":
                 result = solve_knapsack_gbfs(
                     item_names, weights, values, self.capacity,
+                    regions=regions,
                     max_states=self.params.get('max_states', 5000)
                 )
             elif self.algorithm == "BPSO":
                 result = solve_knapsack_bpso(
                     item_names, weights, values, self.capacity,
+                    regions=regions,
                     n_particles=self.params.get('n_particles', 30),
                     max_iterations=self.params.get('max_iterations', 50),
                     w=self.params.get('w', 0.7),
                     c1=self.params.get('c1', 2.0),
                     c2=self.params.get('c2', 2.0)
                 )
-            elif self.algorithm == "DP":
-                result = solve_knapsack_dp(item_names, weights, values, self.capacity)
             else:
                 raise ValueError(f"Unknown algorithm: {self.algorithm}")
             
@@ -105,60 +111,10 @@ class AlgorithmWorker(QThread):
             self.finished.emit({'error': str(e), 'traceback': error_detail})
 
 
+
 # =============================================================================
 # INTERACTIVE CANVAS (Click to select items)
 # =============================================================================
-
-class InteractiveCanvas(FigureCanvas):
-    """Canvas with click support for item selection"""
-    
-    def __init__(self, parent=None, width=10, height=8, dpi=100):
-        self.fig = Figure(figsize=(width, height), dpi=dpi, facecolor='white')
-        super().__init__(self.fig)
-        self.setParent(parent)
-        
-        # State
-        self.clickable = False
-        self.item_positions = []  # [(x, y, item_idx), ...]
-        self.selected_items = set()
-        self.callback = None  # Callback when item clicked
-        
-        # Connect click event
-        self.mpl_connect('button_press_event', self.on_click)
-    
-    def on_click(self, event):
-        """Handle mouse click"""
-        if not self.clickable or event.inaxes is None:
-            return
-        
-        # Find nearest item
-        min_dist = float('inf')
-        clicked_idx = -1
-        
-        for x, y, idx in self.item_positions:
-            dist = (event.xdata - x)**2 + (event.ydata - y)**2
-            if dist < min_dist:
-                min_dist = dist
-                clicked_idx = idx
-        
-        # Toggle selection if close enough
-        if clicked_idx >= 0 and min_dist < 100:
-            if clicked_idx in self.selected_items:
-                self.selected_items.remove(clicked_idx)
-            else:
-                self.selected_items.add(clicked_idx)
-            
-            if self.callback:
-                self.callback(clicked_idx, clicked_idx in self.selected_items)
-    
-    def set_clickable(self, clickable, positions=None, callback=None):
-        """Enable/disable click interaction"""
-        self.clickable = clickable
-        if positions:
-            self.item_positions = positions
-        if callback:
-            self.callback = callback
-
 
 # =============================================================================
 # MAIN GUI CLASS
@@ -193,7 +149,7 @@ class KnapsackSolverGUI(QMainWindow):
     
     def init_ui(self):
         """Initialize main UI"""
-        self.setWindowTitle('Knapsack Solver - Multi-Objective Optimization (GBFS | BPSO | DP)')
+        self.setWindowTitle('Knapsack Solver - Multi-Objective Optimization (GBFS | BPSO)')
         self.setGeometry(50, 50, 1600, 900)
         
         # Main widget and layout
@@ -229,7 +185,7 @@ class KnapsackSolverGUI(QMainWindow):
         panel.setStyleSheet("""
             QWidget {
                 background-color: #f5f6fa;
-                font-family: 'Segoe UI', Arial;
+                font-family: Arial, sans-serif;
             }
             QGroupBox {
                 font-weight: bold;
@@ -430,15 +386,11 @@ class KnapsackSolverGUI(QMainWindow):
             }
         """)
         
-        # Tab 1: Problem Visualization (Interactive)
-        self.tab_problem = self.create_problem_tab()
-        self.tabs.addTab(self.tab_problem, "Problem")
-        
-        # Tab 2: GBFS Algorithm Flow
+        # Tab 1: GBFS Algorithm Flow
         self.tab_gbfs = self.create_gbfs_tab()
         self.tabs.addTab(self.tab_gbfs, "GBFS Flow")
         
-        # Tab 3: BPSO Algorithm
+        # Tab 2: BPSO Algorithm
         self.tab_bpso = self.create_bpso_tab()
         self.tabs.addTab(self.tab_bpso, "BPSO Swarm")
         
@@ -458,6 +410,9 @@ class KnapsackSolverGUI(QMainWindow):
         self.tab_chapter3 = self.create_chapter3_tab()
         self.tabs.addTab(self.tab_chapter3, "Chapter 3")
         
+        # Set default tab to first one (GBFS Flow)
+        self.tabs.setCurrentIndex(0)
+        
         layout.addWidget(self.tabs)
         
         return panel
@@ -466,38 +421,8 @@ class KnapsackSolverGUI(QMainWindow):
     # TAB CREATION
     # =========================================================================
     
-    def create_problem_tab(self):
-        """Tab 1: Interactive problem visualization"""
-        tab = QWidget()
-        layout = QVBoxLayout(tab)
-        
-        # Info label
-        info = QLabel("Click on items to manually select/deselect")
-        info.setStyleSheet("background-color: #fff9c4; padding: 8px; font-weight: bold;")
-        layout.addWidget(info)
-        
-        # Canvas
-        self.problem_canvas = InteractiveCanvas(width=12, height=9)
-        layout.addWidget(self.problem_canvas)
-        
-        # Buttons
-        btn_layout = QHBoxLayout()
-        
-        clear_btn = QPushButton("Clear Selection")
-        clear_btn.clicked.connect(self.clear_selection)
-        btn_layout.addWidget(clear_btn)
-        
-        visualize_btn = QPushButton("Visualize Problem")
-        visualize_btn.clicked.connect(self.visualize_problem)
-        btn_layout.addWidget(visualize_btn)
-        
-        btn_layout.addStretch()
-        layout.addLayout(btn_layout)
-        
-        return tab
-    
     def create_gbfs_tab(self):
-        """Tab 2: GBFS algorithm flow"""
+        """Tab 1: GBFS algorithm flow"""
         tab = QWidget()
         layout = QVBoxLayout(tab)
         
@@ -533,7 +458,7 @@ class KnapsackSolverGUI(QMainWindow):
         tab = QWidget()
         layout = QVBoxLayout(tab)
         
-        info = QLabel("GBFS vs BPSO vs DP - Performance Comparison")
+        info = QLabel("GBFS vs BPSO - Performance Comparison")
         info.setStyleSheet("background-color: #fff3e0; padding: 8px;")
         layout.addWidget(info)
         
@@ -561,7 +486,7 @@ class KnapsackSolverGUI(QMainWindow):
         return tab
     
     def create_solution_tab(self):
-        """Tab 7: Solution details table"""
+        """Tab 7: Solution details table - Both GBFS and BPSO"""
         tab = QWidget()
         layout = QVBoxLayout(tab)
         
@@ -569,20 +494,45 @@ class KnapsackSolverGUI(QMainWindow):
         info.setStyleSheet("background-color: #e0f2f1; padding: 8px;")
         layout.addWidget(info)
         
-        self.solution_table = QTableWidget()
-        self.solution_table.setStyleSheet("""
+        # GBFS Table
+        gbfs_label = QLabel("🔍 GBFS (Greedy Best-First Search) - Selected Items")
+        gbfs_label.setStyleSheet("background-color: #4CAF50; color: white; padding: 5px; font-weight: bold;")
+        layout.addWidget(gbfs_label)
+        
+        self.gbfs_solution_table = QTableWidget()
+        self.gbfs_solution_table.setStyleSheet("""
             QTableWidget {
                 gridline-color: #bdc3c7;
                 font-size: 10px;
             }
             QHeaderView::section {
-                background-color: #34495e;
+                background-color: #388E3C;
                 color: white;
                 padding: 5px;
                 font-weight: bold;
             }
         """)
-        layout.addWidget(self.solution_table)
+        layout.addWidget(self.gbfs_solution_table)
+        
+        # BPSO Table
+        bpso_label = QLabel("🐝 BPSO (Binary Particle Swarm Optimization) - Selected Items")
+        bpso_label.setStyleSheet("background-color: #2196F3; color: white; padding: 5px; font-weight: bold;")
+        layout.addWidget(bpso_label)
+        
+        self.bpso_solution_table = QTableWidget()
+        self.bpso_solution_table.setStyleSheet("""
+            QTableWidget {
+                gridline-color: #bdc3c7;
+                font-size: 10px;
+            }
+            QHeaderView::section {
+                background-color: #1976D2;
+                color: white;
+                padding: 5px;
+                font-weight: bold;
+            }
+        """)
+        layout.addWidget(self.bpso_solution_table)
         
         return tab
     
@@ -670,9 +620,6 @@ class KnapsackSolverGUI(QMainWindow):
             # Clear previous results
             self.results = {}
             
-            # Visualize problem
-            self.visualize_problem()
-            
             self.statusBar().showMessage(f'Loaded: {test_name}')
             
         except Exception as e:
@@ -701,57 +648,6 @@ class KnapsackSolverGUI(QMainWindow):
         text = f"""Items: {info['N_Items']} | Capacity: {info['Capacity']} | Regions: {info['N_Regions']} | Total Value: {int(info['Total_Value'])}"""
         self.testcase_info.setText(text)
     
-    def clear_selection(self):
-        """Clear manual item selection"""
-        if hasattr(self, 'problem_canvas'):
-            self.problem_canvas.selected_items.clear()
-            self.visualize_problem()
-    
-    def visualize_problem(self):
-        """Visualize problem (items distribution)"""
-        if self.test_data_df is None:
-            return
-        
-        try:
-            fig = self.problem_canvas.fig
-            fig.clear()
-            
-            # Create scatter plot
-            ax = fig.add_subplot(111)
-            
-            # Plot all items
-            for idx, row in self.test_data_df.iterrows():
-                color = 'green' if idx in self.problem_canvas.selected_items else 'gray'
-                alpha = 1.0 if idx in self.problem_canvas.selected_items else 0.4
-                
-                ax.scatter(row['weight'], row['value'], 
-                          s=100, c=color, alpha=alpha, edgecolors='black')
-                
-                if idx in self.problem_canvas.selected_items:
-                    ax.annotate(f"Item {idx}", (row['weight'], row['value']),
-                              fontsize=8, ha='center')
-            
-            ax.set_xlabel('Weight', fontsize=12)
-            ax.set_ylabel('Value', fontsize=12)
-            ax.set_title('Items Distribution (Click to Select)', fontsize=14, fontweight='bold')
-            ax.grid(True, alpha=0.3)
-            
-            # Store positions for click detection
-            positions = [(row['weight'], row['value'], idx) 
-                        for idx, row in self.test_data_df.iterrows()]
-            self.problem_canvas.set_clickable(True, positions, self.on_item_clicked)
-            
-            fig.tight_layout()
-            self.problem_canvas.draw()
-            
-        except Exception as e:
-            print(f"Error visualizing problem: {e}")
-    
-    def on_item_clicked(self, item_idx, is_selected):
-        """Handle item click event"""
-        self.visualize_problem()
-        action = "Selected" if is_selected else "Deselected"
-        self.statusBar().showMessage(f'{action} Item {item_idx}')
     
     def run_all_algorithms(self):
         """Run all three algorithms"""
@@ -779,21 +675,26 @@ class KnapsackSolverGUI(QMainWindow):
                 'w': self.bpso_w.value(),
                 'c1': 2.0,
                 'c2': 2.0
-            },
-            'dp': {}
+            }
         }
         
         # Prepare items in correct format for algorithms
         items_for_algo = []
         for idx, row in self.test_data_df.iterrows():
-            items_for_algo.append({
+            item_dict = {
                 'name': f'Item_{idx}',
                 'weight': row['weight'],
                 'value': row['value']
-            })
+            }
+            # Add region if available
+            if 'Region' in row:
+                item_dict['region'] = row['Region']
+            elif 'region' in row:
+                item_dict['region'] = row['region']
+            items_for_algo.append(item_dict)
         
         # Run algorithms sequentially
-        algorithms = ['GBFS', 'BPSO', 'DP']
+        algorithms = ['GBFS', 'BPSO']
         
         try:
             for algo in algorithms:
@@ -832,16 +733,17 @@ class KnapsackSolverGUI(QMainWindow):
         
         self.statusBar().showMessage(f'{algo} completed: Value={result.get("total_value", 0)}')
         
-        # If all algorithms done
-        if len(self.results) == 3:
+        # If all algorithms done (only GBFS and BPSO now)
+        if len(self.results) == 2:
             self.run_all_btn.setEnabled(True)
             self.progress_bar.setVisible(False)
             
             # Update visualizations
             self.update_all_visualizations()
             
-            QMessageBox.information(self, "Success", 
-                                  "All algorithms completed successfully!")
+            self.statusBar().showMessage("All algorithms completed!")
+            
+            # Keep current tab (don't auto-switch)
     
     def update_all_visualizations(self):
         """Update all visualization tabs after algorithms run"""
@@ -890,8 +792,8 @@ class KnapsackSolverGUI(QMainWindow):
             traceback.print_exc()
     
     def visualize_comparison(self):
-        """Compare all three algorithms"""
-        if len(self.results) < 3:
+        """Compare GBFS and BPSO algorithms"""
+        if len(self.results) < 2:
             return
         
         try:
@@ -899,13 +801,13 @@ class KnapsackSolverGUI(QMainWindow):
             fig.clear()
             
             # Create comparison plot
-            algorithms = ['GBFS', 'BPSO', 'DP']
+            algorithms = ['GBFS', 'BPSO']
             values = [self.results[a]['total_value'] for a in algorithms]
             times = [self.results[a]['execution_time'] for a in algorithms]
             
             # Two subplots
             ax1 = fig.add_subplot(121)
-            colors = ['#27ae60', '#3498db', '#e74c3c']
+            colors = ['#27ae60', '#3498db']
             ax1.bar(algorithms, values, color=colors, alpha=0.7)
             ax1.set_ylabel('Total Value')
             ax1.set_title('Solution Quality')
@@ -946,7 +848,7 @@ class KnapsackSolverGUI(QMainWindow):
             ax3 = fig.add_subplot(2, 2, 3)
             ax4 = fig.add_subplot(2, 2, 4)
             
-            colors_algo = {'GBFS': '#27ae60', 'BPSO': '#3498db', 'DP': '#e74c3c'}
+            colors_algo = {'GBFS': '#27ae60', 'BPSO': '#3498db'}
             
             # Plot 1: Regional distribution for each algorithm
             for algo, result in self.results.items():
@@ -1049,43 +951,57 @@ class KnapsackSolverGUI(QMainWindow):
             traceback.print_exc()
     
     def populate_solution_table(self):
-        """Populate solution details table"""
+        """Populate solution details table for both GBFS and BPSO"""
         if len(self.results) == 0:
             return
         
         try:
-            # Use best result (highest value)
-            best_algo = max(self.results, key=lambda a: self.results[a]['total_value'])
-            result = self.results[best_algo]
+            # Populate GBFS table
+            if 'GBFS' in self.results:
+                self._populate_single_table(
+                    self.gbfs_solution_table, 
+                    self.results['GBFS'], 
+                    'GBFS'
+                )
             
-            selected_items = result['selected_items']
-            
-            # Setup table
-            self.solution_table.setRowCount(len(selected_items))
-            self.solution_table.setColumnCount(6)
-            self.solution_table.setHorizontalHeaderLabels([
-                'Item ID', 'Weight', 'Value', 'Region', 'Ratio', 'Algorithm'
-            ])
-            
-            # Populate rows
-            for i, item_name in enumerate(selected_items):
-                # Get item index
-                idx = int(item_name.split('_')[1])
-                row = self.test_data_df.iloc[idx]
-                
-                self.solution_table.setItem(i, 0, QTableWidgetItem(item_name))
-                self.solution_table.setItem(i, 1, QTableWidgetItem(str(row['weight'])))
-                self.solution_table.setItem(i, 2, QTableWidgetItem(str(row['value'])))
-                self.solution_table.setItem(i, 3, QTableWidgetItem(str(row.get('region', 'N/A'))))
-                
-                ratio = row['value'] / row['weight'] if row['weight'] > 0 else 0
-                self.solution_table.setItem(i, 4, QTableWidgetItem(f"{ratio:.2f}"))
-                self.solution_table.setItem(i, 5, QTableWidgetItem(best_algo))
-            
-            self.solution_table.resizeColumnsToContents()
+            # Populate BPSO table
+            if 'BPSO' in self.results:
+                self._populate_single_table(
+                    self.bpso_solution_table, 
+                    self.results['BPSO'], 
+                    'BPSO'
+                )
             
         except Exception as e:
             print(f"Error populating table: {e}")
+    
+    def _populate_single_table(self, table, result, algo_name):
+        """Helper to populate a single solution table"""
+        selected_items = result['selected_items']
+        
+        # Setup table
+        table.setRowCount(len(selected_items))
+        table.setColumnCount(6)
+        table.setHorizontalHeaderLabels([
+            'Item ID', 'Weight', 'Value', 'Region', 'Ratio', 'Algorithm'
+        ])
+        
+        # Populate rows
+        for i, item_name in enumerate(selected_items):
+            # Get item index
+            idx = int(item_name.split('_')[1])
+            row = self.test_data_df.iloc[idx]
+            
+            table.setItem(i, 0, QTableWidgetItem(item_name))
+            table.setItem(i, 1, QTableWidgetItem(str(row['weight'])))
+            table.setItem(i, 2, QTableWidgetItem(str(row['value'])))
+            table.setItem(i, 3, QTableWidgetItem(str(row.get('region', 'N/A'))))
+            
+            ratio = row['value'] / row['weight'] if row['weight'] > 0 else 0
+            table.setItem(i, 4, QTableWidgetItem(f"{ratio:.2f}"))
+            table.setItem(i, 5, QTableWidgetItem(algo_name))
+        
+        table.resizeColumnsToContents()
     
     def run_chapter3_experiments(self):
         """Run Chapter 3 experiments"""
@@ -1189,11 +1105,10 @@ class KnapsackSolverGUI(QMainWindow):
                 # Calculate average across all test cases
                 avg_gbfs = df['gbfs_value'].mean()
                 avg_bpso = df['bpso_value'].mean()
-                avg_dp = df['dp_value'].mean()
                 
-                algorithms = ['GBFS', 'BPSO', 'DP']
-                values = [avg_gbfs, avg_bpso, avg_dp]
-                colors = ['#27ae60', '#3498db', '#e74c3c']
+                algorithms = ['GBFS', 'BPSO']
+                values = [avg_gbfs, avg_bpso]
+                colors = ['#27ae60', '#3498db']
                 
                 ax1.bar(algorithms, values, color=colors, alpha=0.7)
                 ax1.set_ylabel('Average Value', fontsize=11, fontweight='bold')
@@ -1208,9 +1123,8 @@ class KnapsackSolverGUI(QMainWindow):
                 
                 avg_gbfs_time = df['gbfs_time'].mean()
                 avg_bpso_time = df['bpso_time'].mean()
-                avg_dp_time = df['dp_time'].mean()
                 
-                times = [avg_gbfs_time, avg_bpso_time, avg_dp_time]
+                times = [avg_gbfs_time, avg_bpso_time]
                 
                 ax2.bar(algorithms, times, color=colors, alpha=0.7)
                 ax2.set_ylabel('Average Time (s)', fontsize=11, fontweight='bold')
@@ -1255,11 +1169,9 @@ class KnapsackSolverGUI(QMainWindow):
                 # Plot 2: Execution Time
                 gbfs_time = df['gbfs_time'].values * 1000  # Convert to ms
                 bpso_time = df['bpso_time'].values * 1000
-                dp_time = df['dp_time'].values * 1000
                 
-                ax2.bar([i - width for i in x], gbfs_time, width, label='GBFS', color='#27ae60', alpha=0.7)
-                ax2.bar(x, bpso_time, width, label='BPSO', color='#3498db', alpha=0.7)
-                ax2.bar([i + width for i in x], dp_time, width, label='DP', color='#e74c3c', alpha=0.7)
+                ax2.bar([i - width/2 for i in x], gbfs_time, width, label='GBFS', color='#27ae60', alpha=0.7)
+                ax2.bar([i + width/2 for i in x], bpso_time, width, label='BPSO', color='#3498db', alpha=0.7)
                 
                 ax2.set_xlabel('Data Characteristic', fontsize=11, fontweight='bold')
                 ax2.set_ylabel('Time (ms)', fontsize=11, fontweight='bold')
@@ -1299,6 +1211,7 @@ class KnapsackSolverGUI(QMainWindow):
                     'Algorithm': algo,
                     'Total Value': result['total_value'],
                     'Total Weight': result['total_weight'],
+                    'Region Coverage': result.get('region_coverage', 0),
                     'Items Selected': len(result['selected_items']),
                     'Execution Time': result['execution_time']
                 })
@@ -1330,16 +1243,14 @@ def main():
     
     # Set default font (use system font instead of Segoe UI)
     font = QFont('Arial', 10)
-    # Set default font (use system font instead of Segoe UI)
-    font = QFont('Arial', 10)
     app.setFont(font)
     
     # Create and show GUI
     gui = KnapsackSolverGUI()
     gui.show()
     
-    sys.exit(app.exec_())
+    return app.exec_()
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())

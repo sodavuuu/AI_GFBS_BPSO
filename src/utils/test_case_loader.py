@@ -76,6 +76,10 @@ class TestCaseLoader:
         weights = df['Quantity'].values.tolist()
         values = df['Total'].values.tolist()
         
+        # Extract Region and Category (for Multi-Objective)
+        regions = df['Region'].values.tolist() if 'Region' in df.columns else [None] * len(df)
+        categories = df['Category'].values.tolist() if 'Category' in df.columns else [None] * len(df)
+        
         # Capacity
         if capacity_ratio is not None:
             capacity = int(sum(weights) * capacity_ratio)
@@ -86,6 +90,8 @@ class TestCaseLoader:
             'items': items,
             'weights': weights,
             'values': values,
+            'regions': regions,
+            'categories': categories,
             'capacity': capacity,
             'n_items': len(items),
             'test_case_name': name,
