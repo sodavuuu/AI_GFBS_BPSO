@@ -28,7 +28,6 @@ from src.gbfs_knapsack import solve_knapsack_gbfs
 from src.bpso_knapsack import solve_knapsack_bpso
 from src.dp_knapsack import solve_knapsack_dp
 from src.advanced_visualizer import AdvancedKnapsackVisualizer
-from src.algorithm_flowchart import draw_gbfs_flowchart, draw_bpso_flowchart
 
 
 class MatplotlibCanvas(FigureCanvas):
@@ -423,14 +422,14 @@ class KnapsackGUIEnhanced(QMainWindow):
         self.tab_gbfs_tree_layout = QVBoxLayout(self.tab_gbfs_tree)
         self.canvas_gbfs_tree = MatplotlibCanvas(width=14, height=10)
         self.tab_gbfs_tree_layout.addWidget(self.canvas_gbfs_tree)
-        self.tabs.addTab(self.tab_gbfs_tree, "GBFS Algorithm Flow")
+        self.tabs.addTab(self.tab_gbfs_tree, "GBFS State Tree")
         
         # Tab 5: BPSO Swarm
         self.tab_bpso_swarm = QWidget()
         self.tab_bpso_swarm_layout = QVBoxLayout(self.tab_bpso_swarm)
         self.canvas_bpso_swarm = MatplotlibCanvas(width=14, height=10)
         self.tab_bpso_swarm_layout.addWidget(self.canvas_bpso_swarm)
-        self.tabs.addTab(self.tab_bpso_swarm, "BPSO Algorithm Flow")
+        self.tabs.addTab(self.tab_bpso_swarm, "BPSO Swarm")
         
         # Tab 6: Regional Distribution
         self.tab_regional = QWidget()
@@ -581,49 +580,40 @@ class KnapsackGUIEnhanced(QMainWindow):
             self.current_test_data = None
     
     def visualize_problem(self):
-        """Visualize problem characteristics (like GA_TSP map)"""
+        """Visualize problem characteristics - Fixed for canvas"""
         if self.current_test_case is None:
             return
         
         try:
             fig = self.canvas_problem.fig
             fig.clear()
+            ax = fig.add_subplot(111)
             
-            # Create dummy solution for initial visualization
-            dummy_solution = {
-                'selected_items': [],
-                'total_value': 0,
-                'total_weight': 0,
-                'capacity': self.current_test_case['capacity']
-            }
+            # Show test case info
+            tc = self.current_test_case
+            info_text = (
+                f"Test Case: {tc['test_case_name']}\n\n"
+                f"Items: {tc['n_items']}\n"
+                f"Capacity: {tc['capacity']:.0f}\n"
+                f"Total Value: {tc['total_value']:.0f}\n"
+                f"Total Weight: {tc['total_weight']:.0f}\n"
+                f"Regions: {tc.get('regions', 'N/A')}\n\n"
+                f"Correlation: {tc.get('correlation', 0):.3f}\n\n"
+                "Click RUN ALL ALGORITHMS to see solution"
+            )
             
-            # If we have detailed data, create better visualization
-            if self.current_test_data is not None:
-                self.visualizer.plot_knapsack_solution_map(
-                    dummy_solution, 
-                    self.current_test_data, 
-                    save_path=None
-                )
-                
-                # Copy to our canvas
-                new_fig = plt.gcf()
-                self.canvas_problem.fig = new_fig
-                self.canvas_problem.draw()
-            else:
-                # Simple visualization
-                ax = fig.add_subplot(111)
-                ax.text(0.5, 0.5, 
-                       f"Test Case: {self.current_test_case['test_case_name']}\n\n"
-                       f"Items: {self.current_test_case['n_items']}\n"
-                       f"Capacity: {self.current_test_case['capacity']:.0f}\n"
-                       f"Total Value Available: {self.current_test_case['total_value']:.0f}\n\n"
-                       "Click RUN to see solution visualization",
-                       ha='center', va='center', fontsize=14)
-                ax.axis('off')
-                self.canvas_problem.draw()
-                
+            ax.text(0.5, 0.5, info_text, ha='center', va='center',
+                   fontsize=13, family='monospace',
+                   bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.2, pad=1.5))
+            ax.axis('off')
+            
+            fig.tight_layout()
+            self.canvas_problem.draw()
+            
         except Exception as e:
             print(f"Error visualizing problem: {e}")
+            import traceback
+            traceback.print_exc()
     
     def run_all_algorithms(self):
         """Run all three algorithms"""
@@ -710,70 +700,203 @@ class KnapsackGUIEnhanced(QMainWindow):
         self.populate_solution_table()
     
     def visualize_best_solution(self):
-        """Visualize best solution on problem map"""
-        if 'bpso' not in self.results or self.current_test_data is None:
+        """Visualize best solution on problem map - Fixed for canvas"""
+        if not self.results or self.current_test_data is None:
+            # Show placeholder
+            fig = self.canvas_problem.fig
+            fig.clear()
+            ax = fig.add_subplot(111)
+            ax.text(0.5, 0.5, 'Run algorithms to see solution visualization', 
+                   ha='center', va='center', fontsize=14)
+            ax.axis('off')
+            self.canvas_problem.draw()
             return
         
         try:
-            best_solution = self.results['bpso']  # Use BPSO as default
+            # Use best result (DP > BPSO > GBFS)
+            best_solution = self.results.get('dp', self.results.get('bpso', self.results.get('gbfs')))
             
             fig = self.canvas_problem.fig
             fig.clear()
             
-            self.visualizer.plot_knapsack_solution_map(
-                best_solution,
-                self.current_test_data,
-                save_path=None
-            )
+            # Create visualization directly on canvas figure
+            ax = fig.add_subplot(111)
             
-            # Copy figure
-            new_fig = plt.gcf()
-            self.canvas_problem.fig = new_fig
+            # Simple bar chart showing selected vs not selected
+            selected_indices = best_solution['selected_indices']
+            n_items = len(self.current_test_case['items'])
+            
+            colors = ['green' if i in selected_indices else 'lightgray' for i in range(n_items)]
+            values = self.current_test_case['values']
+            
+            ax.bar(range(min(50, n_items)), values[:50], color=colors[:50], alpha=0.7, edgecolor='black', linewidth=0.5)
+            ax.set_xlabel('Item Index', fontweight='bold')
+            ax.set_ylabel('Value', fontweight='bold')
+            ax.set_title(f'Solution: {len(selected_indices)} Items Selected (Green)', fontweight='bold', pad=15)
+            ax.grid(True, alpha=0.3, axis='y')
+            
+            # Add summary text
+            summary = (f"Total Value: {best_solution['total_value']:.0f}\n"
+                      f"Total Weight: {best_solution['total_weight']:.1f}/{self.current_test_case['capacity']}\n"
+                      f"Items: {len(selected_indices)}/{n_items}")
+            ax.text(0.98, 0.97, summary, transform=ax.transAxes, fontsize=11,
+                   verticalalignment='top', horizontalalignment='right',
+                   bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
+            
+            fig.tight_layout()
             self.canvas_problem.draw()
             
         except Exception as e:
             print(f"Error visualizing solution: {e}")
+            import traceback
+            traceback.print_exc()
     
     def visualize_convergence(self):
-        """Visualize BPSO convergence"""
+        """Visualize BPSO convergence - Fixed for canvas"""
         if 'bpso' not in self.results:
+            # Show placeholder
+            fig = self.canvas_convergence.fig
+            fig.clear()
+            ax = fig.add_subplot(111)
+            ax.text(0.5, 0.5, 'Run BPSO to see convergence', 
+                   ha='center', va='center', fontsize=14)
+            ax.axis('off')
+            self.canvas_convergence.draw()
             return
         
         try:
             fig = self.canvas_convergence.fig
             fig.clear()
+            ax = fig.add_subplot(111)
             
-            self.visualizer.plot_convergence(self.results['bpso'], save_path=None)
+            result = self.results['bpso']
             
-            new_fig = plt.gcf()
-            self.canvas_convergence.fig = new_fig
+            # Check if we have convergence history
+            if 'convergence' in result and 'best_fitness' in result['convergence']:
+                history = result['convergence']['best_fitness']
+                iterations = range(1, len(history) + 1)
+                
+                # Plot convergence curve
+                ax.plot(iterations, history, 'b-', linewidth=2.5, label='Best Fitness', 
+                       marker='o', markersize=5, markevery=max(1, len(history)//15))
+                
+                # Add average fitness if available
+                if 'avg_fitness' in result['convergence']:
+                    avg_history = result['convergence']['avg_fitness']
+                    ax.plot(iterations, avg_history, 'r--', linewidth=1.5, alpha=0.7,
+                           label='Average Fitness', marker='s', markersize=4,
+                           markevery=max(1, len(avg_history)//15))
+                
+                ax.set_xlabel('Iteration', fontsize=12, fontweight='bold')
+                ax.set_ylabel('Fitness Value', fontsize=12, fontweight='bold')
+                ax.set_title('BPSO Convergence Curve', fontsize=14, fontweight='bold', pad=15)
+                ax.legend(loc='lower right', fontsize=10)
+                ax.grid(True, alpha=0.3)
+                
+                # Annotate final value
+                final_val = history[-1]
+                ax.annotate(f'Final: {final_val:.0f}',
+                           xy=(len(history), final_val),
+                           xytext=(-60, 20), textcoords='offset points',
+                           bbox=dict(boxstyle='round', facecolor='yellow', alpha=0.7),
+                           arrowprops=dict(arrowstyle='->', lw=1.5))
+            else:
+                # Fallback: show result summary
+                summary = (f"BPSO Result\n\n"
+                          f"Final Value: {result['total_value']:.0f}\n"
+                          f"Weight: {result['total_weight']:.1f}\n"
+                          f"Items: {len(result['selected_items'])}\n"
+                          f"Time: {result['execution_time']:.4f}s\n\n"
+                          f"(No convergence history available)")
+                ax.text(0.5, 0.5, summary, ha='center', va='center',
+                       fontsize=12, family='monospace',
+                       bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.3, pad=1.5))
+                ax.axis('off')
+            
+            fig.tight_layout()
             self.canvas_convergence.draw()
             
         except Exception as e:
             print(f"Error visualizing convergence: {e}")
+            import traceback
+            traceback.print_exc()
     
     def visualize_comparison(self):
-        """Visualize algorithm comparison"""
-        if len(self.results) < 3:
+        """Visualize algorithm comparison - Fixed for canvas"""
+        if len(self.results) < 2:
+            # Show placeholder
+            fig = self.canvas_comparison.fig
+            fig.clear()
+            ax = fig.add_subplot(111)
+            ax.text(0.5, 0.5, 'Run at least 2 algorithms to compare', 
+                   ha='center', va='center', fontsize=14)
+            ax.axis('off')
+            self.canvas_comparison.draw()
             return
         
         try:
             fig = self.canvas_comparison.fig
             fig.clear()
             
-            self.visualizer.plot_algorithm_comparison_detailed(
-                self.results['gbfs'],
-                self.results['bpso'],
-                self.results['dp'],
-                save_path=None
-            )
+            # Create 2x2 subplots
+            ax1 = fig.add_subplot(2, 2, 1)
+            ax2 = fig.add_subplot(2, 2, 2)
+            ax3 = fig.add_subplot(2, 2, 3)
+            ax4 = fig.add_subplot(2, 2, 4)
             
-            new_fig = plt.gcf()
-            self.canvas_comparison.fig = new_fig
+            algorithms = []
+            values = []
+            times = []
+            items_selected = []
+            
+            for alg_name in ['gbfs', 'bpso', 'dp']:
+                if alg_name in self.results:
+                    r = self.results[alg_name]
+                    algorithms.append(alg_name.upper())
+                    values.append(r['total_value'])
+                    times.append(r['execution_time'])
+                    items_selected.append(len(r['selected_items']))
+            
+            colors = ['#3498db', '#e74c3c', '#2ecc71'][:len(algorithms)]
+            
+            # Plot 1: Total Value
+            ax1.bar(algorithms, values, color=colors, alpha=0.7, edgecolor='black')
+            ax1.set_ylabel('Total Value', fontweight='bold')
+            ax1.set_title('Solution Quality', fontweight='bold', fontsize=11)
+            ax1.grid(True, alpha=0.3, axis='y')
+            
+            # Plot 2: Execution Time
+            ax2.bar(algorithms, times, color=colors, alpha=0.7, edgecolor='black')
+            ax2.set_ylabel('Time (s)', fontweight='bold')
+            ax2.set_title('Execution Time', fontweight='bold', fontsize=11)
+            ax2.grid(True, alpha=0.3, axis='y')
+            
+            # Plot 3: Items Selected
+            ax3.bar(algorithms, items_selected, color=colors, alpha=0.7, edgecolor='black')
+            ax3.set_ylabel('Count', fontweight='bold')
+            ax3.set_title('Items Selected', fontweight='bold', fontsize=11)
+            ax3.grid(True, alpha=0.3, axis='y')
+            
+            # Plot 4: Summary Table
+            summary = "Algorithm Comparison\n" + "="*25 + "\n\n"
+            for i, alg in enumerate(algorithms):
+                summary += f"{alg}:\n"
+                summary += f"  Value: {values[i]:.0f}\n"
+                summary += f"  Time:  {times[i]:.4f}s\n"
+                summary += f"  Items: {items_selected[i]}\n\n"
+            
+            ax4.text(0.1, 0.9, summary, ha='left', va='top',
+                    fontsize=10, family='monospace',
+                    transform=ax4.transAxes)
+            ax4.axis('off')
+            
+            fig.tight_layout()
             self.canvas_comparison.draw()
             
         except Exception as e:
             print(f"Error visualizing comparison: {e}")
+            import traceback
+            traceback.print_exc()
     
     def populate_solution_table(self):
         """Populate solution details table"""
@@ -815,67 +938,119 @@ class KnapsackGUIEnhanced(QMainWindow):
             print(f"Error populating table: {e}")
     
     def visualize_gbfs_tree(self):
-        """Visualize GBFS flowchart - Google Images style"""
+        """Visualize GBFS state tree"""
+        if 'gbfs' not in self.results:
+            return
+        
         try:
             fig = self.canvas_gbfs_tree.fig
             fig.clear()
             
-            # Draw GBFS flowchart
+            result = self.results['gbfs']
+            
+            # Always show statistics
             ax = fig.add_subplot(111)
-            draw_gbfs_flowchart(ax)
             
-            # Add result statistics if available
-            if 'gbfs' in self.results:
-                result = self.results['gbfs']
-                stats_text = (
-                    f"Current Run Stats:\n"
-                    f"Value: {result['total_value']:.0f} | "
-                    f"States: {result.get('states_explored', 'N/A')} | "
-                    f"Time: {result['execution_time']:.3f}s"
-                )
-                ax.text(0.5, -0.3, stats_text, transform=ax.transAxes,
-                       fontsize=9, ha='center', fontweight='bold',
-                       bbox=dict(boxstyle='round', facecolor='#ecf0f1', alpha=0.8))
+            info_text = (
+                f"GBFS Algorithm Results\n\n"
+                f"Total States Explored: {result.get('states_explored', 'N/A')}\n"
+                f"Final Value: {result['total_value']:.0f}\n"
+                f"Total Weight: {result['total_weight']:.1f}\n"
+                f"Items Selected: {len(result['selected_items'])}\n"
+                f"Execution Time: {result['execution_time']:.4f}s\n\n"
+            )
             
-            fig.tight_layout()
+            # Check if we have state_tree for visualization
+            if 'state_tree' in result and result['state_tree']:
+                info_text += "State Tree: Available \u2713\n(Tree visualization feature coming soon)"
+                color = '#2ecc71'
+            else:
+                info_text += "State Tree: Not available\n(Algorithm didn't store tree data)"
+                color = '#e74c3c'
+            
+            ax.text(0.5, 0.5, info_text, ha='center', va='center', 
+                   fontsize=13, family='monospace',
+                   bbox=dict(boxstyle='round', facecolor=color, alpha=0.1, pad=1))
+            ax.axis('off')
+            
             self.canvas_gbfs_tree.draw()
             
         except Exception as e:
-            print(f"Error visualizing GBFS flowchart: {e}")
-            import traceback
-            traceback.print_exc()
+            print(f"Error visualizing GBFS tree: {e}")
     
     def visualize_bpso_swarm(self):
-        """Visualize BPSO flowchart - Google Images style"""
+        """Visualize BPSO swarm behavior"""
+        if 'bpso' not in self.results:
+            return
+        
         try:
             fig = self.canvas_bpso_swarm.fig
             fig.clear()
             
-            # Draw BPSO flowchart
-            ax = fig.add_subplot(111)
-            draw_bpso_flowchart(ax)
+            result = self.results['bpso']
             
-            # Add result statistics if available
-            if 'bpso' in self.results:
-                result = self.results['bpso']
-                stats_text = (
-                    f"Current Run Stats:\n"
-                    f"Value: {result['total_value']:.0f} | "
-                    f"Particles: {result.get('n_particles', 'N/A')} | "
-                    f"Iterations: {result.get('iterations', 'N/A')} | "
-                    f"Time: {result['execution_time']:.3f}s"
+            # Check if BPSO has convergence data
+            if 'convergence' in result and 'best_fitness' in result['convergence']:
+                # Plot convergence curve
+                ax = fig.add_subplot(111)
+                history = result['convergence']['best_fitness']
+                iterations = range(1, len(history) + 1)
+                
+                ax.plot(iterations, history, 'b-', linewidth=2.5, label='Best Fitness', marker='o', 
+                       markersize=4, markevery=max(1, len(history)//20))
+                
+                if 'avg_fitness' in result['convergence']:
+                    avg_history = result['convergence']['avg_fitness']
+                    ax.plot(iterations, avg_history, 'r--', linewidth=1.5, alpha=0.7, 
+                           label='Average Fitness', marker='s', markersize=3, 
+                           markevery=max(1, len(avg_history)//20))
+                
+                ax.set_xlabel('Iteration', fontsize=12, fontweight='bold')
+                ax.set_ylabel('Fitness Value', fontsize=12, fontweight='bold')
+                ax.set_title('BPSO Swarm Convergence Behavior', fontsize=14, fontweight='bold', pad=15)
+                ax.legend(loc='lower right', fontsize=10)
+                ax.grid(True, alpha=0.3, linestyle='--')
+                
+                # Add final value annotation
+                final_val = history[-1]
+                ax.annotate(f'Final: {final_val:.0f}', 
+                           xy=(len(history), final_val), 
+                           xytext=(len(history)*0.7, final_val*1.05),
+                           fontsize=10, fontweight='bold',
+                           bbox=dict(boxstyle='round,pad=0.5', facecolor='yellow', alpha=0.7),
+                           arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0.3', lw=1.5))
+            else:
+                # Fallback: show statistics
+                ax = fig.add_subplot(111)
+                info_text = (
+                    f"BPSO Algorithm Results\n\n"
+                    f"Particles: {result.get('n_particles', 'N/A')}\n"
+                    f"Iterations: {result.get('iterations', 'N/A')}\n"
+                    f"Best Value: {result['total_value']:.0f}\n"
+                    f"Total Weight: {result['total_weight']:.1f}\n"
+                    f"Items Selected: {len(result['selected_items'])}\n\n"
+                    "(Swarm history visualization not available)"
                 )
-                ax.text(0.5, -0.05, stats_text, transform=ax.transAxes,
-                       fontsize=9, ha='center', fontweight='bold',
-                       bbox=dict(boxstyle='round', facecolor='#ecf0f1', alpha=0.8))
+                ax.text(0.5, 0.5, info_text, ha='center', va='center', 
+                       fontsize=13, family='monospace',
+                       bbox=dict(boxstyle='round', facecolor='#3498db', alpha=0.1, pad=1))
+                ax.axis('off')
             
             fig.tight_layout()
             self.canvas_bpso_swarm.draw()
             
         except Exception as e:
-            print(f"Error visualizing BPSO flowchart: {e}")
-            import traceback
-            traceback.print_exc()
+            print(f"Error visualizing BPSO swarm: {e}")
+    
+    def visualize_regional_distribution(self):
+        """Visualize regional distribution of selected items"""
+        if len(self.results) == 0 or self.current_test_data is None:
+            return
+        
+        try:
+            fig = self.canvas_regional.fig
+            fig.clear()
+            
             # Use BPSO result as default
             best_solution = self.results.get('bpso', self.results.get('gbfs', self.results.get('dp')))
             
