@@ -765,22 +765,32 @@ class KnapsackGUIEnhanced(QMainWindow):
             fig = self.canvas_gbfs_tree.fig
             fig.clear()
             
-            # Check if GBFS has state_tree data
-            if 'state_tree' in self.results['gbfs']:
-                self.visualizer.plot_gbfs_state_tree(self.results['gbfs'], save_path=None)
-                new_fig = plt.gcf()
-                self.canvas_gbfs_tree.fig = new_fig
+            result = self.results['gbfs']
+            
+            # Always show statistics
+            ax = fig.add_subplot(111)
+            
+            info_text = (
+                f"GBFS Algorithm Results\n\n"
+                f"Total States Explored: {result.get('states_explored', 'N/A')}\n"
+                f"Final Value: {result['total_value']:.0f}\n"
+                f"Total Weight: {result['total_weight']:.1f}\n"
+                f"Items Selected: {len(result['selected_items'])}\n"
+                f"Execution Time: {result['execution_time']:.4f}s\n\n"
+            )
+            
+            # Check if we have state_tree for visualization
+            if 'state_tree' in result and result['state_tree']:
+                info_text += "State Tree: Available \u2713\n(Tree visualization feature coming soon)"
+                color = '#2ecc71'
             else:
-                # Fallback: show text
-                ax = fig.add_subplot(111)
-                ax.text(0.5, 0.5, 
-                       f"GBFS State Tree\n\n"
-                       f"Total States Explored: {self.results['gbfs'].get('states_explored', 'N/A')}\n"
-                       f"Final Value: {self.results['gbfs']['total_value']:.0f}\n"
-                       f"Items Selected: {len(self.results['gbfs']['selected_items'])}\n\n"
-                       "(State tree visualization not available)",
-                       ha='center', va='center', fontsize=12)
-                ax.axis('off')
+                info_text += "State Tree: Not available\n(Algorithm didn't store tree data)"
+                color = '#e74c3c'
+            
+            ax.text(0.5, 0.5, info_text, ha='center', va='center', 
+                   fontsize=13, family='monospace',
+                   bbox=dict(boxstyle='round', facecolor=color, alpha=0.1, pad=1))
+            ax.axis('off')
             
             self.canvas_gbfs_tree.draw()
             
@@ -796,32 +806,56 @@ class KnapsackGUIEnhanced(QMainWindow):
             fig = self.canvas_bpso_swarm.fig
             fig.clear()
             
-            # Check if BPSO has swarm history
-            if 'swarm_history' in self.results['bpso']:
-                self.visualizer.plot_swarm_evolution(self.results['bpso'], save_path=None)
-                new_fig = plt.gcf()
-                self.canvas_bpso_swarm.fig = new_fig
-            else:
-                # Fallback: show diversity plot
-                ax = fig.add_subplot(111)
-                if 'convergence_history' in self.results['bpso']:
-                    history = self.results['bpso']['convergence_history']
-                    ax.plot(history, 'b-', linewidth=2, label='Best Fitness')
-                    ax.set_xlabel('Iteration', fontsize=12)
-                    ax.set_ylabel('Fitness Value', fontsize=12)
-                    ax.set_title('BPSO Swarm Behavior\n(Convergence over iterations)', fontsize=14, fontweight='bold')
-                    ax.legend()
-                    ax.grid(True, alpha=0.3)
-                else:
-                    ax.text(0.5, 0.5, 
-                           f"BPSO Swarm Analysis\n\n"
-                           f"Particles: {self.results['bpso'].get('n_particles', 'N/A')}\n"
-                           f"Iterations: {self.results['bpso'].get('iterations', 'N/A')}\n"
-                           f"Best Value: {self.results['bpso']['total_value']:.0f}\n\n"
-                           "(Swarm history not available)",
-                           ha='center', va='center', fontsize=12)
-                    ax.axis('off')
+            result = self.results['bpso']
             
+            # Check if BPSO has convergence data
+            if 'convergence' in result and 'best_fitness' in result['convergence']:
+                # Plot convergence curve
+                ax = fig.add_subplot(111)
+                history = result['convergence']['best_fitness']
+                iterations = range(1, len(history) + 1)
+                
+                ax.plot(iterations, history, 'b-', linewidth=2.5, label='Best Fitness', marker='o', 
+                       markersize=4, markevery=max(1, len(history)//20))
+                
+                if 'avg_fitness' in result['convergence']:
+                    avg_history = result['convergence']['avg_fitness']
+                    ax.plot(iterations, avg_history, 'r--', linewidth=1.5, alpha=0.7, 
+                           label='Average Fitness', marker='s', markersize=3, 
+                           markevery=max(1, len(avg_history)//20))
+                
+                ax.set_xlabel('Iteration', fontsize=12, fontweight='bold')
+                ax.set_ylabel('Fitness Value', fontsize=12, fontweight='bold')
+                ax.set_title('BPSO Swarm Convergence Behavior', fontsize=14, fontweight='bold', pad=15)
+                ax.legend(loc='lower right', fontsize=10)
+                ax.grid(True, alpha=0.3, linestyle='--')
+                
+                # Add final value annotation
+                final_val = history[-1]
+                ax.annotate(f'Final: {final_val:.0f}', 
+                           xy=(len(history), final_val), 
+                           xytext=(len(history)*0.7, final_val*1.05),
+                           fontsize=10, fontweight='bold',
+                           bbox=dict(boxstyle='round,pad=0.5', facecolor='yellow', alpha=0.7),
+                           arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0.3', lw=1.5))
+            else:
+                # Fallback: show statistics
+                ax = fig.add_subplot(111)
+                info_text = (
+                    f"BPSO Algorithm Results\n\n"
+                    f"Particles: {result.get('n_particles', 'N/A')}\n"
+                    f"Iterations: {result.get('iterations', 'N/A')}\n"
+                    f"Best Value: {result['total_value']:.0f}\n"
+                    f"Total Weight: {result['total_weight']:.1f}\n"
+                    f"Items Selected: {len(result['selected_items'])}\n\n"
+                    "(Swarm history visualization not available)"
+                )
+                ax.text(0.5, 0.5, info_text, ha='center', va='center', 
+                       fontsize=13, family='monospace',
+                       bbox=dict(boxstyle='round', facecolor='#3498db', alpha=0.1, pad=1))
+                ax.axis('off')
+            
+            fig.tight_layout()
             self.canvas_bpso_swarm.draw()
             
         except Exception as e:
