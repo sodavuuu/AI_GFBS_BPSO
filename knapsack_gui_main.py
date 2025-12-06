@@ -269,6 +269,43 @@ class KnapsackGUIEnhanced(QMainWindow):
         bpso_w.addWidget(self.bpso_w)
         params_layout.addLayout(bpso_w)
         
+        bpso_c1 = QHBoxLayout()
+        bpso_c1.addWidget(QLabel("Cognitive (c₁):"))
+        self.bpso_c1 = QDoubleSpinBox()
+        self.bpso_c1.setRange(0.0, 4.0)
+        self.bpso_c1.setValue(2.0)
+        self.bpso_c1.setSingleStep(0.5)
+        bpso_c1.addWidget(self.bpso_c1)
+        params_layout.addLayout(bpso_c1)
+        
+        bpso_c2 = QHBoxLayout()
+        bpso_c2.addWidget(QLabel("Social (c₂):"))
+        self.bpso_c2 = QDoubleSpinBox()
+        self.bpso_c2.setRange(0.0, 4.0)
+        self.bpso_c2.setValue(2.0)
+        self.bpso_c2.setSingleStep(0.5)
+        bpso_c2.addWidget(self.bpso_c2)
+        params_layout.addLayout(bpso_c2)
+        
+        params_layout.addWidget(self._separator())
+        
+        # Heuristic Type
+        heur_label = QLabel("<b>GBFS Heuristic:</b>")
+        heur_label.setStyleSheet("font-size: 11px;")
+        params_layout.addWidget(heur_label)
+        
+        self.heuristic_combo = QComboBox()
+        self.heuristic_combo.addItems(["Value/Weight Ratio", "Pure Value", "Pure Weight"])
+        self.heuristic_combo.setStyleSheet("""
+            QComboBox {
+                padding: 5px;
+                font-size: 10px;
+                border: 1px solid #bdc3c7;
+                border-radius: 3px;
+            }
+        """)
+        params_layout.addWidget(self.heuristic_combo)
+        
         params_group.setLayout(params_layout)
         layout.addWidget(params_group)
         
@@ -358,7 +395,48 @@ class KnapsackGUIEnhanced(QMainWindow):
         self.tab_comparison_layout.addWidget(self.canvas_comparison)
         self.tabs.addTab(self.tab_comparison, "⚖️ Algorithm Comparison")
         
-        # Tab 4: Solution Details
+        # Tab 4: GBFS State Tree
+        self.tab_gbfs_tree = QWidget()
+        self.tab_gbfs_tree_layout = QVBoxLayout(self.tab_gbfs_tree)
+        self.canvas_gbfs_tree = MatplotlibCanvas(width=14, height=10)
+        self.tab_gbfs_tree_layout.addWidget(self.canvas_gbfs_tree)
+        self.tabs.addTab(self.tab_gbfs_tree, "🌳 GBFS State Tree")
+        
+        # Tab 5: BPSO Swarm
+        self.tab_bpso_swarm = QWidget()
+        self.tab_bpso_swarm_layout = QVBoxLayout(self.tab_bpso_swarm)
+        self.canvas_bpso_swarm = MatplotlibCanvas(width=14, height=10)
+        self.tab_bpso_swarm_layout.addWidget(self.canvas_bpso_swarm)
+        self.tabs.addTab(self.tab_bpso_swarm, "🦠 BPSO Swarm")
+        
+        # Tab 6: Regional Distribution
+        self.tab_regional = QWidget()
+        self.tab_regional_layout = QVBoxLayout(self.tab_regional)
+        self.canvas_regional = MatplotlibCanvas(width=14, height=10)
+        self.tab_regional_layout.addWidget(self.canvas_regional)
+        self.tabs.addTab(self.tab_regional, "🌍 Regional Analysis")
+        
+        # Tab 7: Selected Items Detail
+        self.tab_items = QWidget()
+        self.tab_items_layout = QVBoxLayout(self.tab_items)
+        self.items_table = QTableWidget()
+        self.items_table.setStyleSheet("""
+            QTableWidget {
+                border: 1px solid #bdc3c7;
+                gridline-color: #ecf0f1;
+                font-size: 10px;
+            }
+            QHeaderView::section {
+                background-color: #16a085;
+                color: white;
+                padding: 8px;
+                font-weight: bold;
+            }
+        """)
+        self.tab_items_layout.addWidget(self.items_table)
+        self.tabs.addTab(self.tab_items, "📋 Selected Items")
+        
+        # Tab 8: Solution Details
         self.tab_solution = QWidget()
         self.tab_solution_layout = QVBoxLayout(self.tab_solution)
         
@@ -519,7 +597,9 @@ class KnapsackGUIEnhanced(QMainWindow):
             bpso_result = solve_knapsack_bpso(items, weights, values, capacity,
                                     n_particles=self.bpso_particles.value(),
                                     max_iterations=self.bpso_iterations.value(),
-                                    w=self.bpso_w.value())
+                                    w=self.bpso_w.value(),
+                                    c1=self.bpso_c1.value(),
+                                    c2=self.bpso_c2.value())
             self.results['bpso'] = bpso_result
             
             self.progress_bar.setValue(70)
@@ -550,13 +630,25 @@ class KnapsackGUIEnhanced(QMainWindow):
         # Tab 1: Update problem visualization with best solution
         self.visualize_best_solution()
         
-        # Tab 2: BPSO Convergence
+        # Tab 2: GBFS State Tree
+        self.visualize_gbfs_tree()
+        
+        # Tab 3: BPSO Swarm
+        self.visualize_bpso_swarm()
+        
+        # Tab 4: BPSO Convergence
         self.visualize_convergence()
         
-        # Tab 3: Algorithm Comparison
+        # Tab 5: Algorithm Comparison
         self.visualize_comparison()
         
-        # Tab 4: Solution table
+        # Tab 6: Regional Distribution
+        self.visualize_regional_distribution()
+        
+        # Tab 7: Items Detail Table
+        self.populate_items_table()
+        
+        # Tab 8: Solution Summary
         self.populate_solution_table()
     
     def visualize_best_solution(self):
@@ -663,6 +755,198 @@ class KnapsackGUIEnhanced(QMainWindow):
             
         except Exception as e:
             print(f"Error populating table: {e}")
+    
+    def visualize_gbfs_tree(self):
+        """Visualize GBFS state tree"""
+        if 'gbfs' not in self.results:
+            return
+        
+        try:
+            fig = self.canvas_gbfs_tree.fig
+            fig.clear()
+            
+            # Check if GBFS has state_tree data
+            if 'state_tree' in self.results['gbfs']:
+                self.visualizer.plot_gbfs_state_tree(self.results['gbfs'], save_path=None)
+                new_fig = plt.gcf()
+                self.canvas_gbfs_tree.fig = new_fig
+            else:
+                # Fallback: show text
+                ax = fig.add_subplot(111)
+                ax.text(0.5, 0.5, 
+                       f"GBFS State Tree\n\n"
+                       f"Total States Explored: {self.results['gbfs'].get('states_explored', 'N/A')}\n"
+                       f"Final Value: {self.results['gbfs']['total_value']:.0f}\n"
+                       f"Items Selected: {len(self.results['gbfs']['selected_items'])}\n\n"
+                       "(State tree visualization not available)",
+                       ha='center', va='center', fontsize=12)
+                ax.axis('off')
+            
+            self.canvas_gbfs_tree.draw()
+            
+        except Exception as e:
+            print(f"Error visualizing GBFS tree: {e}")
+    
+    def visualize_bpso_swarm(self):
+        """Visualize BPSO swarm behavior"""
+        if 'bpso' not in self.results:
+            return
+        
+        try:
+            fig = self.canvas_bpso_swarm.fig
+            fig.clear()
+            
+            # Check if BPSO has swarm history
+            if 'swarm_history' in self.results['bpso']:
+                self.visualizer.plot_swarm_evolution(self.results['bpso'], save_path=None)
+                new_fig = plt.gcf()
+                self.canvas_bpso_swarm.fig = new_fig
+            else:
+                # Fallback: show diversity plot
+                ax = fig.add_subplot(111)
+                if 'convergence_history' in self.results['bpso']:
+                    history = self.results['bpso']['convergence_history']
+                    ax.plot(history, 'b-', linewidth=2, label='Best Fitness')
+                    ax.set_xlabel('Iteration', fontsize=12)
+                    ax.set_ylabel('Fitness Value', fontsize=12)
+                    ax.set_title('BPSO Swarm Behavior\n(Convergence over iterations)', fontsize=14, fontweight='bold')
+                    ax.legend()
+                    ax.grid(True, alpha=0.3)
+                else:
+                    ax.text(0.5, 0.5, 
+                           f"BPSO Swarm Analysis\n\n"
+                           f"Particles: {self.results['bpso'].get('n_particles', 'N/A')}\n"
+                           f"Iterations: {self.results['bpso'].get('iterations', 'N/A')}\n"
+                           f"Best Value: {self.results['bpso']['total_value']:.0f}\n\n"
+                           "(Swarm history not available)",
+                           ha='center', va='center', fontsize=12)
+                    ax.axis('off')
+            
+            self.canvas_bpso_swarm.draw()
+            
+        except Exception as e:
+            print(f"Error visualizing BPSO swarm: {e}")
+    
+    def visualize_regional_distribution(self):
+        """Visualize regional distribution of selected items"""
+        if len(self.results) == 0 or self.current_test_data is None:
+            return
+        
+        try:
+            fig = self.canvas_regional.fig
+            fig.clear()
+            
+            # Use BPSO result as default
+            best_solution = self.results.get('bpso', self.results.get('gbfs', self.results.get('dp')))
+            
+            selected_indices = best_solution['selected_items']
+            selected_data = self.current_test_data.iloc[selected_indices]
+            
+            # Create subplots
+            ax1 = fig.add_subplot(2, 2, 1)
+            ax2 = fig.add_subplot(2, 2, 2)
+            ax3 = fig.add_subplot(2, 2, 3)
+            ax4 = fig.add_subplot(2, 2, 4)
+            
+            # Regional distribution
+            if 'Segment' in selected_data.columns or 'region' in selected_data.columns:
+                region_col = 'Segment' if 'Segment' in selected_data.columns else 'region'
+                region_counts = selected_data[region_col].value_counts()
+                ax1.pie(region_counts.values, labels=region_counts.index, autopct='%1.1f%%', startangle=90)
+                ax1.set_title('Regional Distribution', fontweight='bold')
+            
+            # Category distribution
+            if 'Category' in selected_data.columns:
+                cat_counts = selected_data['Category'].value_counts()
+                ax2.bar(range(len(cat_counts)), cat_counts.values)
+                ax2.set_xticks(range(len(cat_counts)))
+                ax2.set_xticklabels(cat_counts.index, rotation=45, ha='right')
+                ax2.set_title('Category Distribution', fontweight='bold')
+                ax2.set_ylabel('Count')
+            
+            # Weight vs Value scatter
+            ax3.scatter(selected_data['weight'], selected_data['value'], alpha=0.6, s=100, c='green')
+            ax3.set_xlabel('Weight')
+            ax3.set_ylabel('Value')
+            ax3.set_title('Weight vs Value (Selected Items)', fontweight='bold')
+            ax3.grid(True, alpha=0.3)
+            
+            # Value distribution histogram
+            ax4.hist(selected_data['value'], bins=15, alpha=0.7, color='skyblue', edgecolor='black')
+            ax4.set_xlabel('Value')
+            ax4.set_ylabel('Frequency')
+            ax4.set_title('Value Distribution', fontweight='bold')
+            ax4.grid(True, alpha=0.3, axis='y')
+            
+            fig.tight_layout()
+            self.canvas_regional.draw()
+            
+        except Exception as e:
+            print(f"Error visualizing regional distribution: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    def populate_items_table(self):
+        """Populate detailed items table"""
+        if len(self.results) == 0:
+            return
+        
+        try:
+            # Use BPSO result as default
+            best_solution = self.results.get('bpso', self.results.get('gbfs', self.results.get('dp')))
+            selected_indices = best_solution['selected_items']
+            
+            if self.current_test_data is None:
+                # Fallback: use basic data
+                weights = np.array(self.current_test_case['weights'])
+                values = np.array(self.current_test_case['values'])
+                
+                self.items_table.setRowCount(len(selected_indices))
+                self.items_table.setColumnCount(4)
+                self.items_table.setHorizontalHeaderLabels(['Index', 'Weight', 'Value', 'Ratio (v/w)'])
+                
+                for row, idx in enumerate(selected_indices):
+                    self.items_table.setItem(row, 0, QTableWidgetItem(str(idx)))
+                    self.items_table.setItem(row, 1, QTableWidgetItem(f"{weights[idx]:.1f}"))
+                    self.items_table.setItem(row, 2, QTableWidgetItem(f"{values[idx]:.0f}"))
+                    self.items_table.setItem(row, 3, QTableWidgetItem(f"{values[idx]/weights[idx]:.2f}"))
+            else:
+                # Rich data
+                selected_data = self.current_test_data.iloc[selected_indices]
+                
+                cols = ['Index', 'Weight', 'Value', 'Ratio']
+                if 'Segment' in selected_data.columns:
+                    cols.append('Region')
+                if 'Category' in selected_data.columns:
+                    cols.append('Category')
+                
+                self.items_table.setRowCount(len(selected_indices))
+                self.items_table.setColumnCount(len(cols))
+                self.items_table.setHorizontalHeaderLabels(cols)
+                
+                for row, (idx, item) in enumerate(zip(selected_indices, selected_data.iterrows())):
+                    col = 0
+                    self.items_table.setItem(row, col, QTableWidgetItem(str(idx)))
+                    col += 1
+                    self.items_table.setItem(row, col, QTableWidgetItem(f"{item[1]['weight']:.1f}"))
+                    col += 1
+                    self.items_table.setItem(row, col, QTableWidgetItem(f"{item[1]['value']:.0f}"))
+                    col += 1
+                    self.items_table.setItem(row, col, QTableWidgetItem(f"{item[1]['value']/item[1]['weight']:.2f}"))
+                    col += 1
+                    
+                    if 'Segment' in selected_data.columns:
+                        self.items_table.setItem(row, col, QTableWidgetItem(str(item[1]['Segment'])))
+                        col += 1
+                    if 'Category' in selected_data.columns:
+                        self.items_table.setItem(row, col, QTableWidgetItem(str(item[1]['Category'])))
+            
+            self.items_table.resizeColumnsToContents()
+            
+        except Exception as e:
+            print(f"Error populating items table: {e}")
+            import traceback
+            traceback.print_exc()
 
 
 def main():
