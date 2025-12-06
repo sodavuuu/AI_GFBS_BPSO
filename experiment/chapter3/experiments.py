@@ -20,11 +20,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 import numpy as np
 import pandas as pd
 import time
-from src.test_case_loader import TestCaseLoader
-from src.gbfs_knapsack import solve_knapsack_gbfs
-from src.bpso_knapsack import solve_knapsack_bpso
-from src.dp_knapsack import solve_knapsack_dp
-from src.advanced_visualizer import AdvancedKnapsackVisualizer
+from src.utils import TestCaseLoader
+from src.algorithms import solve_knapsack_gbfs, solve_knapsack_bpso, solve_knapsack_dp
+from src.visualization import AdvancedKnapsackVisualizer
 
 
 class Chapter3Experiments:

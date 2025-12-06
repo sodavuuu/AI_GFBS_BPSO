@@ -65,14 +65,14 @@ class AdvancedKnapsackVisualizer:
                 marker='o', linewidth=2, markersize=8, color=self.colors['gbfs'])
         ax1.fill_between(results_df['max_states'], results_df['value'], 
                          alpha=0.3, color=self.colors['gbfs'])
-        ax1.set_xlabel('Max States (Depth Limit)', fontweight='bold')
-        ax1.set_ylabel('Total Value', fontweight='bold')
-        ax1.set_title('GBFS: Impact of Max States on Solution Quality', fontweight='bold', pad=15)
+        ax1.set_xlabel('Số trạng thái tối đa (Giới hạn độ sâu)', fontweight='bold')
+        ax1.set_ylabel('Tổng giá trị', fontweight='bold')
+        ax1.set_title('GBFS: Ảnh hưởng của Max States đến chất lượng giải pháp', fontweight='bold', pad=15)
         ax1.grid(True, alpha=0.3)
         
         # Thêm annotation cho best value
         best_idx = results_df['value'].idxmax()
-        ax1.annotate(f'Best: {results_df.loc[best_idx, "value"]:.0f}\n@{results_df.loc[best_idx, "max_states"]} states',
+        ax1.annotate(f'Tốt nhất: {results_df.loc[best_idx, "value"]:.0f}\n@{results_df.loc[best_idx, "max_states"]} trạng thái',
                     xy=(results_df.loc[best_idx, 'max_states'], results_df.loc[best_idx, 'value']),
                     xytext=(20, 20), textcoords='offset points',
                     bbox=dict(boxstyle='round,pad=0.5', fc='yellow', alpha=0.7),
@@ -84,18 +84,18 @@ class AdvancedKnapsackVisualizer:
                 marker='s', linewidth=2, markersize=8, color='#e67e22')
         ax2.fill_between(results_df['max_states'], results_df['time'], 
                          alpha=0.3, color='#e67e22')
-        ax2.set_xlabel('Max States', fontweight='bold')
-        ax2.set_ylabel('Execution Time (seconds)', fontweight='bold')
-        ax2.set_title('GBFS: Computational Cost vs Max States', fontweight='bold', pad=15)
+        ax2.set_xlabel('Số trạng thái tối đa', fontweight='bold')
+        ax2.set_ylabel('Thời gian thực thi (giây)', fontweight='bold')
+        ax2.set_title('GBFS: Chi phí tính toán vs Max States', fontweight='bold', pad=15)
         ax2.grid(True, alpha=0.3)
         
         # Plot 3: Efficiency (Value/Time ratio)
         ax3 = fig.add_subplot(gs[1, 0])
         efficiency = results_df['value'] / results_df['time']
         ax3.bar(results_df['max_states'], efficiency, color=self.colors['gbfs'], alpha=0.7, edgecolor='black')
-        ax3.set_xlabel('Max States', fontweight='bold')
-        ax3.set_ylabel('Efficiency (Value/Time)', fontweight='bold')
-        ax3.set_title('GBFS: Solution Efficiency Analysis', fontweight='bold', pad=15)
+        ax3.set_xlabel('Số trạng thái tối đa', fontweight='bold')
+        ax3.set_ylabel('Hiệu suất (Giá trị/Thời gian)', fontweight='bold')
+        ax3.set_title('GBFS: Phân tích hiệu suất giải pháp', fontweight='bold', pad=15)
         ax3.grid(True, alpha=0.3, axis='y')
         
         # Plot 4: Summary table
@@ -103,12 +103,12 @@ class AdvancedKnapsackVisualizer:
         ax4.axis('off')
         
         summary_data = [
-            ['Metric', 'Best', 'Worst', 'Range'],
-            ['Value', f"{results_df['value'].max():.0f}", f"{results_df['value'].min():.0f}", 
+            ['Chỉ số', 'Tốt nhất', 'Tệ nhất', 'Khoảng'],
+            ['Giá trị', f"{results_df['value'].max():.0f}", f"{results_df['value'].min():.0f}", 
              f"{results_df['value'].max() - results_df['value'].min():.0f}"],
-            ['Time (s)', f"{results_df['time'].min():.3f}", f"{results_df['time'].max():.3f}", 
+            ['Thời gian (s)', f"{results_df['time'].min():.3f}", f"{results_df['time'].max():.3f}", 
              f"{results_df['time'].max() - results_df['time'].min():.3f}"],
-            ['Efficiency', f"{efficiency.max():.0f}", f"{efficiency.min():.0f}", 
+            ['Hiệu suất', f"{efficiency.max():.0f}", f"{efficiency.min():.0f}", 
              f"{efficiency.max() - efficiency.min():.0f}"]
         ]
         
@@ -123,7 +123,7 @@ class AdvancedKnapsackVisualizer:
             table[(0, i)].set_facecolor('#3498db')
             table[(0, i)].set_text_props(weight='bold', color='white')
         
-        plt.suptitle('3.1.1.a: GBFS Parameter Analysis - Max States Impact', 
+        plt.suptitle('3.1.1.a: Phân tích tham số GBFS - Ảnh hưởng Max States', 
                     fontsize=16, fontweight='bold', y=0.98)
         
         if save_path:
@@ -141,11 +141,11 @@ class AdvancedKnapsackVisualizer:
             param_name: 'n_particles', 'max_iterations', 'w', 'c1', 'c2'
         """
         param_labels = {
-            'n_particles': 'Swarm Size (Number of Particles)',
-            'max_iterations': 'Max Iterations',
-            'w': 'Inertia Weight (w)',
-            'c1': 'Cognitive Coefficient (c₁)',
-            'c2': 'Social Coefficient (c₂)'
+            'n_particles': 'Kích thước bầy đàn (Số hạt)',
+            'max_iterations': 'Số vòng lặp tối đa',
+            'w': 'Trọng số quán tính (w)',
+            'c1': 'Hệ số nhận thức (c₁)',
+            'c2': 'Hệ số xã hội (c₂)'
         }
         
         fig = plt.figure(figsize=(16, 10))
@@ -163,9 +163,9 @@ class AdvancedKnapsackVisualizer:
                 ax1.plot(history, linewidth=2, marker='o', markersize=4, 
                         markevery=max(1, len(history)//10), label=label, alpha=0.8)
         
-        ax1.set_xlabel('Iteration', fontweight='bold')
-        ax1.set_ylabel('Best Fitness', fontweight='bold')
-        ax1.set_title(f'BPSO: Convergence Comparison - {param_labels.get(param_name, param_name)}', 
+        ax1.set_xlabel('Vòng lặp', fontweight='bold')
+        ax1.set_ylabel('Độ thích nghi tốt nhất', fontweight='bold')
+        ax1.set_title(f'BPSO: So sánh hội tụ - {param_labels.get(param_name, param_name)}', 
                      fontweight='bold', pad=15)
         ax1.legend(loc='best', frameon=True, shadow=True)
         ax1.grid(True, alpha=0.3)
@@ -177,8 +177,8 @@ class AdvancedKnapsackVisualizer:
         ax2.fill_between(results_df[param_col], results_df['value'], 
                          alpha=0.3, color=self.colors['bpso'])
         ax2.set_xlabel(param_labels.get(param_name, param_name), fontweight='bold')
-        ax2.set_ylabel('Final Best Value', fontweight='bold')
-        ax2.set_title('Solution Quality vs Parameter', fontweight='bold', pad=15)
+        ax2.set_ylabel('Giá trị cuối cùng tốt nhất', fontweight='bold')
+        ax2.set_title('Chất lượng giải pháp vs Tham số', fontweight='bold', pad=15)
         ax2.grid(True, alpha=0.3)
         
         # Highlight best
@@ -211,11 +211,11 @@ class AdvancedKnapsackVisualizer:
             bar.set_color(plt.cm.RdYlGn_r(speed / max_speed))
         
         ax3.set_xlabel(param_labels.get(param_name, param_name), fontweight='bold')
-        ax3.set_ylabel('Iterations to Reach 95% of Final Value', fontweight='bold')
-        ax3.set_title('Convergence Speed Analysis', fontweight='bold', pad=15)
+        ax3.set_ylabel('Số vòng lặp để đạt 95% giá trị cuối', fontweight='bold')
+        ax3.set_title('Phân tích tốc độ hội tụ', fontweight='bold', pad=15)
         ax3.grid(True, alpha=0.3, axis='y')
         
-        plt.suptitle(f'3.1.1.b: BPSO Parameter Analysis - {param_labels.get(param_name, param_name)} Impact', 
+        plt.suptitle(f'3.1.1.b: Phân tích tham số BPSO - Ảnh hưởng {param_labels.get(param_name, param_name)}', 
                     fontsize=16, fontweight='bold', y=0.98)
         
         if save_path:
@@ -273,8 +273,8 @@ class AdvancedKnapsackVisualizer:
         # Plot 1: Value comparison (bar chart)
         ax1 = fig.add_subplot(gs[0, 0])
         bars1 = ax1.bar(algorithms, values, color=colors_list, alpha=0.8, edgecolor='black', linewidth=2)
-        ax1.set_ylabel('Total Value', fontweight='bold', fontsize=12)
-        ax1.set_title('Solution Quality Comparison', fontweight='bold', pad=15, fontsize=13)
+        ax1.set_ylabel('Tổng giá trị', fontweight='bold', fontsize=12)
+        ax1.set_title('So sánh chất lượng giải pháp', fontweight='bold', pad=15, fontsize=13)
         ax1.grid(True, alpha=0.3, axis='y')
         
         # Add value labels on bars
@@ -287,8 +287,8 @@ class AdvancedKnapsackVisualizer:
         # Plot 2: Time comparison (bar chart with log scale)
         ax2 = fig.add_subplot(gs[0, 1])
         bars2 = ax2.bar(algorithms, times, color=colors_list, alpha=0.8, edgecolor='black', linewidth=2)
-        ax2.set_ylabel('Execution Time (seconds)', fontweight='bold', fontsize=12)
-        ax2.set_title('Computational Cost Comparison', fontweight='bold', pad=15, fontsize=13)
+        ax2.set_ylabel('Thời gian thực thi (giây)', fontweight='bold', fontsize=12)
+        ax2.set_title('So sánh chi phí tính toán', fontweight='bold', pad=15, fontsize=13)
         ax2.set_yscale('log')
         ax2.grid(True, alpha=0.3, axis='y')
         
@@ -303,8 +303,8 @@ class AdvancedKnapsackVisualizer:
         ax3 = fig.add_subplot(gs[0, 2])
         efficiency = [v/t for v, t in zip(values, times)]
         bars3 = ax3.bar(algorithms, efficiency, color=colors_list, alpha=0.8, edgecolor='black', linewidth=2)
-        ax3.set_ylabel('Efficiency (Value/Time)', fontweight='bold', fontsize=12)
-        ax3.set_title('Algorithm Efficiency', fontweight='bold', pad=15, fontsize=13)
+        ax3.set_ylabel('Hiệu suất (Giá trị/Thời gian)', fontweight='bold', fontsize=12)
+        ax3.set_title('Hiệu suất thuật toán', fontweight='bold', pad=15, fontsize=13)
         ax3.grid(True, alpha=0.3, axis='y')
         
         # Highlight best efficiency
@@ -325,17 +325,17 @@ class AdvancedKnapsackVisualizer:
             
             # Add GBFS and DP as horizontal lines
             ax4.axhline(y=gbfs_result['total_value'], color=self.colors['gbfs'], 
-                       linestyle='--', linewidth=2, label='GBFS (Greedy)')
+                       linestyle='--', linewidth=2, label='GBFS (Tham lam)')
             ax4.axhline(y=dp_result['total_value'], color=self.colors['dp'], 
-                       linestyle='--', linewidth=2, label='DP (Optimal)')
+                       linestyle='--', linewidth=2, label='DP (Tối ưu)')
             
-            ax4.set_xlabel('Iteration', fontweight='bold', fontsize=12)
-            ax4.set_ylabel('Best Fitness', fontweight='bold', fontsize=12)
-            ax4.set_title('Convergence Analysis: BPSO vs Baselines', fontweight='bold', pad=15, fontsize=13)
+            ax4.set_xlabel('Vòng lặp', fontweight='bold', fontsize=12)
+            ax4.set_ylabel('Độ thích nghi tốt nhất', fontweight='bold', fontsize=12)
+            ax4.set_title('Phân tích hội tụ: BPSO vs Baseline', fontweight='bold', pad=15, fontsize=13)
             ax4.legend(loc='best', frameon=True, shadow=True, fontsize=10)
             ax4.grid(True, alpha=0.3)
         else:
-            ax4.text(0.5, 0.5, 'No convergence data available', 
+            ax4.text(0.5, 0.5, 'Không có dữ liệu hội tụ', 
                     ha='center', va='center', fontsize=14, transform=ax4.transAxes)
         
         # Plot 5: Quality vs Time scatter
@@ -347,9 +347,9 @@ class AdvancedKnapsackVisualizer:
             ax5.annotate(alg, (t, val), xytext=(10, 10), textcoords='offset points',
                         fontsize=11, fontweight='bold')
         
-        ax5.set_xlabel('Execution Time (seconds)', fontweight='bold', fontsize=12)
-        ax5.set_ylabel('Total Value', fontweight='bold', fontsize=12)
-        ax5.set_title('Quality vs Speed Trade-off', fontweight='bold', pad=15, fontsize=13)
+        ax5.set_xlabel('Thời gian thực thi (giây)', fontweight='bold', fontsize=12)
+        ax5.set_ylabel('Tổng giá trị', fontweight='bold', fontsize=12)
+        ax5.set_title('Đánh đổi giữa chất lượng và tốc độ', fontweight='bold', pad=15, fontsize=13)
         ax5.set_xscale('log')
         ax5.grid(True, alpha=0.3)
         
@@ -357,7 +357,7 @@ class AdvancedKnapsackVisualizer:
         ax6 = fig.add_subplot(gs[2, :])
         ax6.axis('off')
         
-        table_data = [['Algorithm', 'Value', 'Time (s)', 'Efficiency', '% of Optimal', 'Ranking']]
+        table_data = [['Thuật toán', 'Giá trị', 'Thời gian (s)', 'Hiệu suất', '% Tối ưu', 'Xếp hạng']]
         
         optimal_value = dp_result['total_value']
         
@@ -390,7 +390,7 @@ class AdvancedKnapsackVisualizer:
                 if i % 2 == 0:
                     table[(i, j)].set_facecolor('#ecf0f1')
         
-        plt.suptitle('3.1.2: Algorithm Comparison - GBFS vs BPSO vs DP (vs BPSO-Variant)', 
+        plt.suptitle('3.1.2: So sánh thuật toán - GBFS vs BPSO vs DP (vs BPSO-Biến thể)', 
                     fontsize=18, fontweight='bold', y=0.98)
         
         if save_path:
@@ -576,7 +576,7 @@ class AdvancedKnapsackVisualizer:
         # Unselected items (gray)
         ax1.scatter(unselected_data['weight'], unselected_data['value'], 
                    s=100, c='lightgray', alpha=0.3, edgecolors='gray', 
-                   linewidths=0.5, label='Not Selected')
+                   linewidths=0.5, label='Không được chọn')
         
         # Selected items (colored by region)
         if 'region' in selected_data.columns:
@@ -588,15 +588,15 @@ class AdvancedKnapsackVisualizer:
                 ax1.scatter(region_data['weight'], region_data['value'], 
                            s=300, c=[region_colors[i]], alpha=0.8, 
                            edgecolors='black', linewidths=2, 
-                           label=f'Region {region}', marker='o')
+                           label=f'Vùng {region}', marker='o')
         else:
             ax1.scatter(selected_data['weight'], selected_data['value'], 
                        s=300, c=self.colors['feasible'], alpha=0.8, 
-                       edgecolors='black', linewidths=2, label='Selected')
+                       edgecolors='black', linewidths=2, label='Đã chọn')
         
-        ax1.set_xlabel('Weight', fontweight='bold', fontsize=12)
-        ax1.set_ylabel('Value', fontweight='bold', fontsize=12)
-        ax1.set_title('Item Selection Map: Weight vs Value', fontweight='bold', pad=15, fontsize=13)
+        ax1.set_xlabel('Trọng lượng', fontweight='bold', fontsize=12)
+        ax1.set_ylabel('Giá trị', fontweight='bold', fontsize=12)
+        ax1.set_title('Bản đồ lựa chọn vật phẩm: Trọng lượng vs Giá trị', fontweight='bold', pad=15, fontsize=13)
         ax1.legend(loc='best', frameon=True, shadow=True)
         ax1.grid(True, alpha=0.3)
         
@@ -608,12 +608,12 @@ class AdvancedKnapsackVisualizer:
         
         colors_util = [self.colors['feasible'] if utilization <= 100 else self.colors['infeasible'], 'lightgray']
         wedges, texts, autotexts = ax2.pie([utilization, remaining], 
-                                           labels=['Used', 'Remaining'], 
+                                           labels=['Đã sử dụng', 'Còn lại'], 
                                            autopct='%1.1f%%',
                                            startangle=90, colors=colors_util,
                                            textprops={'fontweight': 'bold', 'fontsize': 11})
         
-        ax2.set_title(f'Capacity Utilization\n{total_weight:.1f} / {capacity:.1f}', 
+        ax2.set_title(f'Sử dụng sức chứa\n{total_weight:.1f} / {capacity:.1f}', 
                      fontweight='bold', pad=15, fontsize=13)
         
         # Plot 3: Regional diversity (if available)
@@ -626,12 +626,12 @@ class AdvancedKnapsackVisualizer:
                    color=region_colors[:len(region_counts)], alpha=0.8, 
                    edgecolor='black', linewidth=2)
             
-            ax3.set_xlabel('Region', fontweight='bold', fontsize=12)
-            ax3.set_ylabel('Number of Items', fontweight='bold', fontsize=12)
-            ax3.set_title('Regional Diversity Distribution', fontweight='bold', pad=15, fontsize=13)
+            ax3.set_xlabel('Vùng', fontweight='bold', fontsize=12)
+            ax3.set_ylabel('Số lượng vật phẩm', fontweight='bold', fontsize=12)
+            ax3.set_title('Phân bố đa dạng theo vùng', fontweight='bold', pad=15, fontsize=13)
             ax3.grid(True, alpha=0.3, axis='y')
         else:
-            ax3.text(0.5, 0.5, 'No regional data', ha='center', va='center', 
+            ax3.text(0.5, 0.5, 'Không có dữ liệu vùng', ha='center', va='center', 
                     fontsize=14, transform=ax3.transAxes)
         
         # Plot 4: Value contribution by category (if available)
@@ -643,11 +643,11 @@ class AdvancedKnapsackVisualizer:
             ax4.barh(category_values.index, category_values.values, 
                     color=self.colors['bpso'], alpha=0.7, edgecolor='black', linewidth=1.5)
             
-            ax4.set_xlabel('Total Value', fontweight='bold', fontsize=12)
-            ax4.set_title('Value Contribution by Category', fontweight='bold', pad=15, fontsize=13)
+            ax4.set_xlabel('Tổng giá trị', fontweight='bold', fontsize=12)
+            ax4.set_title('Đóng góp giá trị theo danh mục', fontweight='bold', pad=15, fontsize=13)
             ax4.grid(True, alpha=0.3, axis='x')
         else:
-            ax4.text(0.5, 0.5, 'No category data', ha='center', va='center', 
+            ax4.text(0.5, 0.5, 'Không có dữ liệu danh mục', ha='center', va='center', 
                     fontsize=14, transform=ax4.transAxes)
         
         # Plot 5: Summary statistics
@@ -655,14 +655,14 @@ class AdvancedKnapsackVisualizer:
         ax5.axis('off')
         
         summary_data = [
-            ['Metric', 'Value'],
-            ['Total Items', f"{len(selected_items)}"],
-            ['Total Value', f"{total_value:.0f}"],
-            ['Total Weight', f"{total_weight:.1f}"],
-            ['Capacity', f"{capacity:.1f}"],
-            ['Utilization', f"{utilization:.1f}%"],
-            ['Avg Value/Item', f"{total_value/len(selected_items):.1f}" if len(selected_items) > 0 else "0"],
-            ['Avg Weight/Item', f"{total_weight/len(selected_items):.1f}" if len(selected_items) > 0 else "0"]
+            ['Chỉ số', 'Giá trị'],
+            ['Tổng số vật phẩm', f"{len(selected_items)}"],
+            ['Tổng giá trị', f"{total_value:.0f}"],
+            ['Tổng trọng lượng', f"{total_weight:.1f}"],
+            ['Sức chứa', f"{capacity:.1f}"],
+            ['Sử dụng', f"{utilization:.1f}%"],
+            ['Giá trị TB/vật', f"{total_value/len(selected_items):.1f}" if len(selected_items) > 0 else "0"],
+            ['Trọng lượng TB/vật', f"{total_weight/len(selected_items):.1f}" if len(selected_items) > 0 else "0"]
         ]
         
         table = ax5.table(cellText=summary_data, cellLoc='left', loc='center',
@@ -676,7 +676,7 @@ class AdvancedKnapsackVisualizer:
             table[(0, i)].set_facecolor('#2c3e50')
             table[(0, i)].set_text_props(weight='bold', color='white')
         
-        plt.suptitle('Knapsack Solution Visualization (Inspired by GA_TSP Map)', 
+        plt.suptitle('Trực quan hóa giải pháp Knapsack', 
                     fontsize=16, fontweight='bold', y=0.98)
         
         if save_path:
@@ -713,8 +713,8 @@ class AdvancedKnapsackVisualizer:
             ax1.text(bar.get_x() + bar.get_width()/2., height,
                     f'{val:.0f}', ha='center', va='bottom', fontweight='bold', fontsize=10)
         
-        ax1.set_ylabel('Total Value', fontsize=11, fontweight='bold')
-        ax1.set_title('Solution Quality Comparison', fontsize=12, fontweight='bold', pad=10)
+        ax1.set_ylabel('Tổng giá trị', fontsize=11, fontweight='bold')
+        ax1.set_title('So sánh chất lượng giải pháp', fontsize=12, fontweight='bold', pad=10)
         ax1.grid(True, alpha=0.3, axis='y')
         
         # Plot 2: Computational Cost (Log scale)
@@ -727,8 +727,8 @@ class AdvancedKnapsackVisualizer:
             ax2.text(bar.get_x() + bar.get_width()/2., height,
                     f'{t:.4f}s', ha='center', va='bottom', fontweight='bold', fontsize=9)
         
-        ax2.set_ylabel('Execution Time (seconds)', fontsize=11, fontweight='bold')
-        ax2.set_title('Computational Cost Comparison', fontsize=12, fontweight='bold', pad=10)
+        ax2.set_ylabel('Thời gian thực thi (giây)', fontsize=11, fontweight='bold')
+        ax2.set_title('So sánh chi phí tính toán', fontsize=12, fontweight='bold', pad=10)
         ax2.set_yscale('log')
         ax2.grid(True, alpha=0.3, axis='y')
         
@@ -736,8 +736,8 @@ class AdvancedKnapsackVisualizer:
         ax3 = fig.add_subplot(gs[0, 2])
         efficiency = values / np.maximum(times, 1e-10)
         bars = ax3.bar(algorithms, efficiency, color=colors, alpha=0.7, edgecolor='black', linewidth=1.5)
-        ax3.set_ylabel('Efficiency (Value/Time)', fontsize=11, fontweight='bold')
-        ax3.set_title('Algorithm Efficiency', fontsize=12, fontweight='bold', pad=10)
+        ax3.set_ylabel('Hiệu suất (Giá trị/Thời gian)', fontsize=11, fontweight='bold')
+        ax3.set_title('Hiệu suất thuật toán', fontsize=12, fontweight='bold', pad=10)
         ax3.grid(True, alpha=0.3, axis='y')
         ax3.set_yscale('log')
         
@@ -749,9 +749,9 @@ class AdvancedKnapsackVisualizer:
             ax4.text(times[i], values[i], algo, ha='center', va='center',
                     fontsize=10, fontweight='bold', color='white')
         
-        ax4.set_xlabel('Execution Time (seconds)', fontsize=12, fontweight='bold')
-        ax4.set_ylabel('Total Value', fontsize=12, fontweight='bold')
-        ax4.set_title('Quality vs Speed Trade-off', fontsize=13, fontweight='bold', pad=15)
+        ax4.set_xlabel('Thời gian thực thi (giây)', fontsize=12, fontweight='bold')
+        ax4.set_ylabel('Tổng giá trị', fontsize=12, fontweight='bold')
+        ax4.set_title('Đánh đổi Chất lượng vs Tốc độ', fontsize=13, fontweight='bold', pad=15)
         ax4.set_xscale('log')
         ax4.legend(loc='best', fontsize=10, frameon=True, shadow=True)
         ax4.grid(True, alpha=0.3)
@@ -760,7 +760,7 @@ class AdvancedKnapsackVisualizer:
         ax5 = fig.add_subplot(gs[1, 2])
         ax5.axis('off')
         
-        summary_data = [['Algorithm', 'Value', 'Time (s)', 'Efficiency', '% of Optimal', 'Ranking']]
+        summary_data = [['Thuật toán', 'Giá trị', 'Thời gian (s)', 'Hiệu suất', '% Tối ưu', 'Xếp hạng']]
         
         # Sort by value for ranking
         sorted_df = df_comparison.sort_values('value_mean', ascending=False)
@@ -830,9 +830,9 @@ class AdvancedKnapsackVisualizer:
         ax1.bar(x, bpso_values, width, label='BPSO', color=self.colors['bpso'], alpha=0.8, edgecolor='black')
         ax1.bar(x + width, dp_values, width, label='DP', color=self.colors['dp'], alpha=0.8, edgecolor='black')
         
-        ax1.set_xlabel('Data Characteristic', fontsize=12, fontweight='bold')
-        ax1.set_ylabel('Total Value', fontsize=12, fontweight='bold')
-        ax1.set_title('Solution Quality: Impact of Data Characteristics', fontsize=14, fontweight='bold', pad=15)
+        ax1.set_xlabel('Đặc điểm dữ liệu', fontsize=12, fontweight='bold')
+        ax1.set_ylabel('Tổng giá trị', fontsize=12, fontweight='bold')
+        ax1.set_title('Chất lượng giải pháp: Ảnh hưởng của đặc điểm dữ liệu', fontsize=14, fontweight='bold', pad=15)
         ax1.set_xticks(x)
         ax1.set_xticklabels([c.replace('_', ' ').title() for c in characteristics], rotation=15, ha='right')
         ax1.legend(fontsize=11, loc='upper left')
@@ -849,9 +849,9 @@ class AdvancedKnapsackVisualizer:
         ax2.bar(x, bpso_times, width, label='BPSO', color=self.colors['bpso'], alpha=0.8, edgecolor='black')
         ax2.bar(x + width, dp_times, width, label='DP', color=self.colors['dp'], alpha=0.8, edgecolor='black')
         
-        ax2.set_xlabel('Data Characteristic', fontsize=12, fontweight='bold')
-        ax2.set_ylabel('Execution Time (seconds)', fontsize=12, fontweight='bold')
-        ax2.set_title('Computational Cost: Impact of Data Characteristics', fontsize=14, fontweight='bold', pad=15)
+        ax2.set_xlabel('Đặc điểm dữ liệu', fontsize=12, fontweight='bold')
+        ax2.set_ylabel('Thời gian thực thi (giây)', fontsize=12, fontweight='bold')
+        ax2.set_title('Chi phí tính toán: Ảnh hưởng của đặc điểm dữ liệu', fontsize=14, fontweight='bold', pad=15)
         ax2.set_yscale('log')
         ax2.set_xticks(x)
         ax2.set_xticklabels([c.replace('_', ' ').title() for c in characteristics], rotation=15, ha='right')
@@ -880,9 +880,9 @@ class AdvancedKnapsackVisualizer:
                     ax3.text(bar.get_x() + bar.get_width()/2., height,
                             f'{height:.1f}%', ha='center', va='bottom', fontsize=8)
         
-        ax3.set_xlabel('Data Characteristic', fontsize=11, fontweight='bold')
-        ax3.set_ylabel('Performance Degradation (%)', fontsize=11, fontweight='bold')
-        ax3.set_title('Sensitivity to Data Correlation', fontsize=12, fontweight='bold', pad=10)
+        ax3.set_xlabel('Đặc điểm dữ liệu', fontsize=11, fontweight='bold')
+        ax3.set_ylabel('Độ suy giảm hiệu suất (%)', fontsize=11, fontweight='bold')
+        ax3.set_title('Độ nhạy cảm với tương quan dữ liệu', fontsize=12, fontweight='bold', pad=10)
         ax3.set_xticks(x_pos)
         ax3.set_xticklabels([c.replace('_', ' ').title() for c in characteristics], 
                            rotation=30, ha='right', fontsize=9)
@@ -893,7 +893,7 @@ class AdvancedKnapsackVisualizer:
         ax4 = fig.add_subplot(gs[2, 1])
         ax4.axis('off')
         
-        table_data = [['Data Type', 'GBFS', 'BPSO', 'DP']]
+        table_data = [['Loại dữ liệu', 'GBFS', 'BPSO', 'DP']]
         for c in characteristics:
             subset = df_data[df_data['characteristic'] == c]
             table_data.append([
