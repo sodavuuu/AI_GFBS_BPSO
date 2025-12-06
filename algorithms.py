@@ -116,22 +116,19 @@ class GBFS_Solver(SearchProblem):
         
         Action = index của item có thể thêm vào
         
-        Điều kiện:
-        - Item chưa được chọn
-        - Thêm vào không vượt capacity
+        Điều kiện (theo flowchart):
+        - Item chưa được chọn (i not in state)
+        - Thêm vào không vượt capacity (weight constraint)
         
-        Cải tiến: Sắp xếp theo ratio để greedy chọn tốt hơn
+        Note: Không sắp xếp ở đây, để GBFS tự chọn dựa trên heuristic
         """
         current_weight = sum(self.items[i].weight for i in state)
         possible_actions = []
         
         for i in range(self.n_items):
-            if i not in state:  # Chưa chọn
-                if current_weight + self.items[i].weight <= self.capacity:  # Còn chỗ
+            if i not in state:  # Item chưa chọn
+                if current_weight + self.items[i].weight <= self.capacity:  # Còn đủ chỗ
                     possible_actions.append(i)
-        
-        # Sắp xếp theo ratio giảm dần để ưu tiên items tốt
-        possible_actions.sort(key=lambda i: self.items[i].ratio, reverse=True)
         
         return possible_actions
     
@@ -167,45 +164,33 @@ class GBFS_Solver(SearchProblem):
     
     def heuristic(self, state):
         """
-        Hàm heuristic: Ước lượng giá trị tối đa có thể đạt từ state này
+        Hàm heuristic cho GBFS theo lý thuyết chuẩn
         
-        Sử dụng Fractional Knapsack Bound:
-        1. Tính value hiện tại
-        2. Sắp xếp items chưa chọn theo ratio giảm dần
-        3. Thêm items theo thứ tự (cho phép fractional)
+        Theo flowchart: GBFS chọn state có heuristic nhỏ nhất (tốt nhất)
+        
+        Với Knapsack maximization problem:
+        - Heuristic = ước lượng khoảng cách đến mục tiêu
+        - State càng tốt → heuristic càng NHỎ
+        - Sử dụng MAX ratio của items chưa chọn làm heuristic
+        
+        Logic:
+        - Tìm item chưa chọn có ratio (v/w) cao nhất
+        - Return âm của ratio đó (-best_ratio)
+        - GBFS sẽ ưu tiên state có potential cao nhất
         
         SimpleAI: heuristic càng NHỎ càng ưu tiên
-        → Return -bound (âm của upper bound)
         """
-        # Value và weight hiện tại
-        current_value = sum(self.items[i].value for i in state)
-        current_weight = sum(self.items[i].weight for i in state)
-        remaining_capacity = self.capacity - current_weight
+        best_ratio = 0
         
-        # Items chưa chọn với ratio
-        remaining_items = []
         for i in range(self.n_items):
             if i not in state:
                 item = self.items[i]
-                remaining_items.append((i, item.weight, item.value, item.ratio))
+                ratio = item.value / item.weight if item.weight > 0 else 0
+                best_ratio = max(best_ratio, ratio)
         
-        # Sort theo ratio giảm dần (tham lam)
-        remaining_items.sort(key=lambda x: x[3], reverse=True)
-        
-        # Fractional knapsack để ước lượng
-        fractional_value = current_value
-        for i, weight, value, ratio in remaining_items:
-            if remaining_capacity >= weight:
-                # Thêm toàn bộ item
-                fractional_value += value
-                remaining_capacity -= weight
-            else:
-                # Thêm phần fractional
-                fractional_value += ratio * remaining_capacity
-                break
-        
-        # Return âm để SimpleAI ưu tiên giá trị cao
-        return -fractional_value
+        # Return âm để state tốt có heuristic nhỏ
+        # GBFS sẽ chọn state dẫn đến item có ratio cao nhất
+        return -best_ratio
     
     def solve(self) -> Dict:
         """
