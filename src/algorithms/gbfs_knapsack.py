@@ -1,8 +1,8 @@
 """
 =================================================================================
-GBFS (Greedy Best-First Search) for Knapsack Problem
+GBFS (Greedy Best-First Search) - Tìm Kiếm Tham Lam cho Bài Toán Knapsack
 =================================================================================
-Uses fractional knapsack heuristic (greedy by value/weight ratio)
+Sử dụng heuristic fractional knapsack (tham lam theo tỷ lệ giá trị/trọng lượng)
 =================================================================================
 """
 
@@ -13,8 +13,8 @@ import time
 
 def solve_knapsack_gbfs(items, weights, values, capacity, max_states=5000):
     """
-    Greedy algorithm: Select items by value/weight ratio
-    Note: max_states parameter kept for interface compatibility but not used
+    Thuật toán tham lam: Chọn vật phẩm theo tỷ lệ giá trị/trọng lượng
+    Lưu ý: Tham số max_states được giữ để tương thích interface nhưng không sử dụng
     """
     start = time.time()
     
@@ -22,13 +22,13 @@ def solve_knapsack_gbfs(items, weights, values, capacity, max_states=5000):
     values = np.array(values, dtype=float)
     n = len(items)
     
-    # Calculate value/weight ratios
+    # Tính tỷ lệ giá trị/trọng lượng
     ratios = values / weights
     
-    # Sort items by ratio (descending)
+    # Sắp xếp các vật phẩm theo tỷ lệ (giảm dần)
     sorted_indices = np.argsort(-ratios)
     
-    # Greedy selection
+    # Chọn tham lam
     selected = []
     total_weight = 0
     total_value = 0

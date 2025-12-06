@@ -443,7 +443,7 @@ class AdvancedKnapsackVisualizer:
             bars = ax1.bar(x + offset, values_by_algo[alg], width, 
                           label=alg.upper(), alpha=0.8, edgecolor='black')
         
-        ax1.set_ylabel('Total Value', fontweight='bold', fontsize=12)
+        ax1.set_ylabel('Tổng giá trị', fontweight='bold', fontsize=12)
         ax1.set_title('Solution Quality: Impact of Data Characteristics', fontweight='bold', pad=15, fontsize=13)
         ax1.set_xticks(x)
         ax1.set_xticklabels([dt.replace('_', ' ').title() for dt in data_types])

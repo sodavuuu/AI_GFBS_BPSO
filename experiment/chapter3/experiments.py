@@ -55,7 +55,7 @@ class Chapter3Experiments:
         )
         
         print(f"\nTest Case: Size Medium 50")
-        print(f"Items: {len(items)}, Capacity: {capacity}\n")
+        print(f"Vật phẩm: {len(items)}, Sức chứa: {capacity}\n")
         
         results = []
         max_states_list = [1000, 2000, 3000, 5000, 7000, 10000]
@@ -76,7 +76,7 @@ class Chapter3Experiments:
                     max_states=max_states
                 )
                 runs.append(result)
-                print(f"  Run {run_id+1}: Value={result['total_value']}, Time={result['execution_time']:.4f}s")
+                print(f"  Chạy {run_id+1}: Giá trị={result['total_value']}, Time={result['execution_time']:.4f}s")
             
             # Aggregate results
             values = [r['total_value'] for r in runs]
@@ -93,19 +93,19 @@ class Chapter3Experiments:
                 'efficiency': np.mean(values) / np.mean(times)
             })
             
-            print(f"  → Mean Value: {np.mean(values):.2f} ± {np.std(values):.2f}")
-            print(f"  → Mean Time: {np.mean(times):.4f} ± {np.std(times):.4f}s\n")
+            print(f"  → Trung bình Giá trị: {np.mean(values):.2f} ± {np.std(values):.2f}")
+            print(f"  → Trung bình Time: {np.mean(times):.4f} ± {np.std(times):.4f}s\n")
         
         # Save CSV
         df = pd.DataFrame(results)
         csv_path = os.path.join(self.output_dir, '3_1_1_a_gbfs_params.csv')
         df.to_csv(csv_path, index=False)
-        print(f"✓ Saved CSV: {csv_path}")
+        print(f"✓ Đã lưu CSV: {csv_path}")
         
         # Generate visualization
         fig_path = os.path.join(self.output_dir, '3_1_1_a_gbfs_params.png')
         self.visualizer.plot_gbfs_parameter_impact(df, save_path=fig_path)
-        print(f"✓ Saved Chart: {fig_path}")
+        print(f"✓ Đã lưu Chart: {fig_path}")
         
         return df
     
@@ -125,7 +125,7 @@ class Chapter3Experiments:
         )
         
         print(f"\nTest Case: Size Medium 50")
-        print(f"Items: {len(items)}, Capacity: {capacity}\n")
+        print(f"Vật phẩm: {len(items)}, Sức chứa: {capacity}\n")
         
         results = []
         swarm_sizes = [10, 20, 30, 50, 70, 100]
@@ -145,7 +145,7 @@ class Chapter3Experiments:
                     n_particles=n_particles, max_iterations=50
                 )
                 runs.append(result)
-                print(f"  Run {run_id+1}: Value={result['total_value']}, Time={result['execution_time']:.4f}s")
+                print(f"  Chạy {run_id+1}: Giá trị={result['total_value']}, Time={result['execution_time']:.4f}s")
             
             # Aggregate
             values = [r['total_value'] for r in runs]
@@ -163,21 +163,21 @@ class Chapter3Experiments:
                 'best_fitness_history': best_run.get('best_fitness_history', [])
             })
             
-            print(f"  → Mean Value: {np.mean(values):.2f} ± {np.std(values):.2f}")
-            print(f"  → Mean Time: {np.mean(times):.4f}s\n")
+            print(f"  → Trung bình Giá trị: {np.mean(values):.2f} ± {np.std(values):.2f}")
+            print(f"  → Trung bình Time: {np.mean(times):.4f}s\n")
         
         # Save CSV (without history column)
         df_save = pd.DataFrame([{k: v for k, v in r.items() if k != 'best_fitness_history'} 
                                for r in results])
         csv_path = os.path.join(self.output_dir, '3_1_1_b_bpso_swarm_size.csv')
         df_save.to_csv(csv_path, index=False)
-        print(f"✓ Saved CSV: {csv_path}")
+        print(f"✓ Đã lưu CSV: {csv_path}")
         
         # Generate visualization
         df_plot = pd.DataFrame(results)
         fig_path = os.path.join(self.output_dir, '3_1_1_b_bpso_swarm_size.png')
         self.visualizer.plot_bpso_parameter_impact(df_plot, param_name='n_particles', save_path=fig_path)
-        print(f"✓ Saved Chart: {fig_path}")
+        print(f"✓ Đã lưu Chart: {fig_path}")
         
         return df_plot
     
@@ -227,20 +227,20 @@ class Chapter3Experiments:
                 'best_fitness_history': best_run.get('best_fitness_history', [])
             })
             
-            print(f"  → Mean Value: {np.mean(values):.2f}, Time: {np.mean(times):.4f}s\n")
+            print(f"  → Trung bình Giá trị: {np.mean(values):.2f}, Time: {np.mean(times):.4f}s\n")
         
         # Save
         df_save = pd.DataFrame([{k: v for k, v in r.items() if k != 'best_fitness_history'} 
                                for r in results])
         csv_path = os.path.join(self.output_dir, '3_1_1_c_bpso_iterations.csv')
         df_save.to_csv(csv_path, index=False)
-        print(f"✓ Saved CSV: {csv_path}")
+        print(f"✓ Đã lưu CSV: {csv_path}")
         
         # Visualize
         df_plot = pd.DataFrame(results)
         fig_path = os.path.join(self.output_dir, '3_1_1_c_bpso_iterations.png')
         self.visualizer.plot_bpso_parameter_impact(df_plot, param_name='max_iterations', save_path=fig_path)
-        print(f"✓ Saved Chart: {fig_path}")
+        print(f"✓ Đã lưu Chart: {fig_path}")
         
         return df_plot
     
@@ -283,20 +283,20 @@ class Chapter3Experiments:
                 'best_fitness_history': best_run.get('best_fitness_history', [])
             })
             
-            print(f"  → Mean Value: {np.mean(values):.2f}\n")
+            print(f"  → Trung bình Giá trị: {np.mean(values):.2f}\n")
         
         # Save
         df_save = pd.DataFrame([{k: v for k, v in r.items() if k != 'best_fitness_history'} 
                                for r in results])
         csv_path = os.path.join(self.output_dir, '3_1_1_d_bpso_w.csv')
         df_save.to_csv(csv_path, index=False)
-        print(f"✓ Saved CSV: {csv_path}")
+        print(f"✓ Đã lưu CSV: {csv_path}")
         
         # Visualize
         df_plot = pd.DataFrame(results)
         fig_path = os.path.join(self.output_dir, '3_1_1_d_bpso_w.png')
         self.visualizer.plot_bpso_parameter_impact(df_plot, param_name='w', save_path=fig_path)
-        print(f"✓ Saved Chart: {fig_path}")
+        print(f"✓ Đã lưu Chart: {fig_path}")
         
         return df_plot
     
@@ -320,7 +320,7 @@ class Chapter3Experiments:
         )
         
         print(f"\nTest Case: {test_case_name}")
-        print(f"Items: {len(items)}, Capacity: {capacity}\n")
+        print(f"Vật phẩm: {len(items)}, Sức chứa: {capacity}\n")
         
         # GBFS - 5 runs
         print("Running GBFS (5 runs)...")
@@ -328,10 +328,10 @@ class Chapter3Experiments:
         for i in range(5):
             r = solve_knapsack_gbfs(items, weights, values, capacity, max_states=5000)
             gbfs_runs.append(r)
-            print(f"  Run {i+1}: Value={r['total_value']}, Time={r['execution_time']:.4f}s")
+            print(f"  Chạy {i+1}: Giá trị={r['total_value']}, Time={r['execution_time']:.4f}s")
         
         gbfs_best = max(gbfs_runs, key=lambda x: x['total_value'])
-        print(f"→ GBFS Best: {gbfs_best['total_value']}\n")
+        print(f"→ GBFS Tốt nhất: {gbfs_best['total_value']}\n")
         
         # BPSO - 5 runs
         print("Running BPSO (5 runs)...")
@@ -339,23 +339,23 @@ class Chapter3Experiments:
         for i in range(5):
             r = solve_knapsack_bpso(items, weights, values, capacity, n_particles=30, max_iterations=50)
             bpso_runs.append(r)
-            print(f"  Run {i+1}: Value={r['total_value']}, Time={r['execution_time']:.4f}s")
+            print(f"  Chạy {i+1}: Giá trị={r['total_value']}, Time={r['execution_time']:.4f}s")
         
         bpso_best = max(bpso_runs, key=lambda x: x['total_value'])
-        print(f"→ BPSO Best: {bpso_best['total_value']}\n")
+        print(f"→ BPSO Tốt nhất: {bpso_best['total_value']}\n")
         
         # DP - 1 run (deterministic)
         print("Running DP...")
         dp_result = solve_knapsack_dp(items, weights, values, capacity)
-        print(f"  DP: Value={dp_result['total_value']}, Time={dp_result['execution_time']:.4f}s")
-        print(f"→ DP (Optimal): {dp_result['total_value']}\n")
+        print(f"  DP: Giá trị={dp_result['total_value']}, Time={dp_result['execution_time']:.4f}s")
+        print(f"→ DP (Tối ưu): {dp_result['total_value']}\n")
         
         # Generate comparison visualization
         fig_path = os.path.join(self.output_dir, f'3_1_2_comparison_{test_case_name.replace(" ", "_")}.png')
         self.visualizer.plot_algorithm_comparison_detailed(
             gbfs_best, bpso_best, dp_result, save_path=fig_path
         )
-        print(f"✓ Saved Chart: {fig_path}")
+        print(f"✓ Đã lưu Chart: {fig_path}")
         
         # Summary CSV
         summary = {
@@ -385,7 +385,7 @@ class Chapter3Experiments:
         df = pd.DataFrame(summary)
         csv_path = os.path.join(self.output_dir, f'3_1_2_comparison_{test_case_name.replace(" ", "_")}.csv')
         df.to_csv(csv_path, index=False)
-        print(f"✓ Saved CSV: {csv_path}\n")
+        print(f"✓ Đã lưu CSV: {csv_path}\n")
         
         return df
     
@@ -443,7 +443,7 @@ class Chapter3Experiments:
         df = pd.DataFrame(results)
         csv_path = os.path.join(self.output_dir, '3_1_2_comparison_all_testcases.csv')
         df.to_csv(csv_path, index=False)
-        print(f"\n✓ Saved CSV: {csv_path}")
+        print(f"\n✓ Đã lưu CSV: {csv_path}")
         
         return df
     
@@ -490,7 +490,7 @@ class Chapter3Experiments:
             gbfs_values = [r['total_value'] for r in gbfs_runs]
             gbfs_times = [r['execution_time'] for r in gbfs_runs]
             gbfs_best = max(gbfs_runs, key=lambda x: x['total_value'])
-            print(f"Mean={np.mean(gbfs_values):.1f}")
+            print(f"Trung bình={np.mean(gbfs_values):.1f}")
             
             print("  BPSO...", end=" ")
             bpso_runs = [solve_knapsack_bpso(items, weights, values, capacity, n_particles=30, max_iterations=50) 
@@ -498,11 +498,11 @@ class Chapter3Experiments:
             bpso_values = [r['total_value'] for r in bpso_runs]
             bpso_times = [r['execution_time'] for r in bpso_runs]
             bpso_best = max(bpso_runs, key=lambda x: x['total_value'])
-            print(f"Mean={np.mean(bpso_values):.1f}")
+            print(f"Trung bình={np.mean(bpso_values):.1f}")
             
             print("  DP...", end=" ")
             dp_r = solve_knapsack_dp(items, weights, values, capacity)
-            print(f"Value={dp_r['total_value']}")
+            print(f"Giá trị={dp_r['total_value']}")
             
             # Store for visualization
             results_dict[group_name] = {
@@ -529,12 +529,12 @@ class Chapter3Experiments:
         df = pd.DataFrame(summary_list)
         csv_path = os.path.join(self.output_dir, '3_1_3_data_characteristics.csv')
         df.to_csv(csv_path, index=False)
-        print(f"\n✓ Saved CSV: {csv_path}")
+        print(f"\n✓ Đã lưu CSV: {csv_path}")
         
         # Generate visualization
         fig_path = os.path.join(self.output_dir, '3_1_3_data_characteristics.png')
         self.visualizer.plot_data_characteristics_impact(results_dict, save_path=fig_path)
-        print(f"✓ Saved Chart: {fig_path}\n")
+        print(f"✓ Đã lưu Chart: {fig_path}\n")
         
         return df
     
@@ -556,7 +556,7 @@ class Chapter3Experiments:
             ("3.1.1.d", "BPSO Inertia Weight", self.experiment_3_1_1_d_bpso_inertia_weight),
             ("3.1.2", "Algorithm Comparison (Single)", lambda: self.experiment_3_1_2_algorithm_comparison_single('Size Medium 50')),
             ("3.1.2", "Algorithm Comparison (All)", self.experiment_3_1_2_algorithm_comparison_all),
-            ("3.1.3", "Data Characteristics", self.experiment_3_1_3_data_characteristics)
+            ("3.1.3", "Đặc điểm dữ liệu", self.experiment_3_1_3_data_characteristics)
         ]
         
         for exp_id, exp_name, exp_func in experiments:
@@ -569,7 +569,7 @@ class Chapter3Experiments:
                 
                 print(f"\n✅ Completed: [{exp_id}] {exp_name}")
             except Exception as e:
-                print(f"\n❌ Error in [{exp_id}] {exp_name}: {str(e)}")
+                print(f"\n❌ Lỗi in [{exp_id}] {exp_name}: {str(e)}")
                 import traceback
                 traceback.print_exc()
         

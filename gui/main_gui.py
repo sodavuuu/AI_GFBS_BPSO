@@ -69,7 +69,7 @@ class AlgorithmWorker(QThread):
     def run(self):
         """Run algorithm in background"""
         try:
-            self.progress.emit(f"Running {self.algorithm}...")
+            self.progress.emit(f"Đang chạy {self.algorithm}...")
             
             # Extract item names, weights, values
             item_names = [item['name'] for item in self.items]
@@ -101,64 +101,13 @@ class AlgorithmWorker(QThread):
         except Exception as e:
             import traceback
             error_detail = traceback.format_exc()
-            self.progress.emit(f"Error: {str(e)}")
+            self.progress.emit(f"Lỗi: {str(e)}")
             self.finished.emit({'error': str(e), 'traceback': error_detail})
 
 
 # =============================================================================
 # INTERACTIVE CANVAS (Click to select items)
 # =============================================================================
-
-class InteractiveCanvas(FigureCanvas):
-    """Canvas with click support for item selection"""
-    
-    def __init__(self, parent=None, width=10, height=8, dpi=100):
-        self.fig = Figure(figsize=(width, height), dpi=dpi, facecolor='white')
-        super().__init__(self.fig)
-        self.setParent(parent)
-        
-        # State
-        self.clickable = False
-        self.item_positions = []  # [(x, y, item_idx), ...]
-        self.selected_items = set()
-        self.callback = None  # Callback when item clicked
-        
-        # Connect click event
-        self.mpl_connect('button_press_event', self.on_click)
-    
-    def on_click(self, event):
-        """Handle mouse click"""
-        if not self.clickable or event.inaxes is None:
-            return
-        
-        # Find nearest item
-        min_dist = float('inf')
-        clicked_idx = -1
-        
-        for x, y, idx in self.item_positions:
-            dist = (event.xdata - x)**2 + (event.ydata - y)**2
-            if dist < min_dist:
-                min_dist = dist
-                clicked_idx = idx
-        
-        # Toggle selection if close enough
-        if clicked_idx >= 0 and min_dist < 100:
-            if clicked_idx in self.selected_items:
-                self.selected_items.remove(clicked_idx)
-            else:
-                self.selected_items.add(clicked_idx)
-            
-            if self.callback:
-                self.callback(clicked_idx, clicked_idx in self.selected_items)
-    
-    def set_clickable(self, clickable, positions=None, callback=None):
-        """Enable/disable click interaction"""
-        self.clickable = clickable
-        if positions:
-            self.item_positions = positions
-        if callback:
-            self.callback = callback
-
 
 # =============================================================================
 # MAIN GUI CLASS
@@ -430,11 +379,7 @@ class KnapsackSolverGUI(QMainWindow):
             }
         """)
         
-        # Tab 1: Problem Visualization (Interactive)
-        self.tab_problem = self.create_problem_tab()
-        self.tabs.addTab(self.tab_problem, "Problem")
-        
-        # Tab 2: GBFS Algorithm Flow
+        # Tab 1: GBFS Algorithm Flow
         self.tab_gbfs = self.create_gbfs_tab()
         self.tabs.addTab(self.tab_gbfs, "GBFS Flow")
         
@@ -444,7 +389,7 @@ class KnapsackSolverGUI(QMainWindow):
         
         # Tab 4: Algorithm Comparison
         self.tab_comparison = self.create_comparison_tab()
-        self.tabs.addTab(self.tab_comparison, "Comparison")
+        self.tabs.addTab(self.tab_comparison, "So sánh")
         
         # Tab 5: Regional Analysis
         self.tab_regional = self.create_regional_tab()
@@ -452,7 +397,7 @@ class KnapsackSolverGUI(QMainWindow):
         
         # Tab 6: Solution Details
         self.tab_solution = self.create_solution_tab()
-        self.tabs.addTab(self.tab_solution, "Details")
+        self.tabs.addTab(self.tab_solution, "Chi tiết")
         
         # Tab 7: Chapter 3 Results
         self.tab_chapter3 = self.create_chapter3_tab()
@@ -465,36 +410,6 @@ class KnapsackSolverGUI(QMainWindow):
     # =========================================================================
     # TAB CREATION
     # =========================================================================
-    
-    def create_problem_tab(self):
-        """Tab 1: Interactive problem visualization"""
-        tab = QWidget()
-        layout = QVBoxLayout(tab)
-        
-        # Info label
-        info = QLabel("Click on items to manually select/deselect")
-        info.setStyleSheet("background-color: #fff9c4; padding: 8px; font-weight: bold;")
-        layout.addWidget(info)
-        
-        # Canvas
-        self.problem_canvas = InteractiveCanvas(width=12, height=9)
-        layout.addWidget(self.problem_canvas)
-        
-        # Buttons
-        btn_layout = QHBoxLayout()
-        
-        clear_btn = QPushButton("Clear Selection")
-        clear_btn.clicked.connect(self.clear_selection)
-        btn_layout.addWidget(clear_btn)
-        
-        visualize_btn = QPushButton("Visualize Problem")
-        visualize_btn.clicked.connect(self.visualize_problem)
-        btn_layout.addWidget(visualize_btn)
-        
-        btn_layout.addStretch()
-        layout.addLayout(btn_layout)
-        
-        return tab
     
     def create_gbfs_tab(self):
         """Tab 2: GBFS algorithm flow"""
@@ -652,12 +567,12 @@ class KnapsackSolverGUI(QMainWindow):
             # Add region if not exists
             if 'region' not in self.test_data_df.columns:
                 # Extract region from Region column or default to 1
-                if 'Region' in self.test_data_df.columns:
+                if 'Khu vực' in self.test_data_df.columns:
                     # Map region names to numbers
                     region_map = {}
-                    for i, r in enumerate(self.test_data_df['Region'].unique()):
+                    for i, r in enumerate(self.test_data_df['Khu vực'].unique()):
                         region_map[r] = i + 1
-                    self.test_data_df['region'] = self.test_data_df['Region'].map(region_map)
+                    self.test_data_df['region'] = self.test_data_df['Khu vực'].map(region_map)
                 else:
                     self.test_data_df['region'] = 1
             
@@ -677,8 +592,8 @@ class KnapsackSolverGUI(QMainWindow):
             
         except Exception as e:
             import traceback
-            error_msg = f"Failed to load test case:\n{str(e)}\n\n{traceback.format_exc()}"
-            QMessageBox.warning(self, "Error", error_msg)
+            error_msg = f"Thất bại to load test case:\n{str(e)}\n\n{traceback.format_exc()}"
+            QMessageBox.warning(self, "Lỗi", error_msg)
             print(error_msg)
     
     def update_problem_info(self, test_name, info):
@@ -691,67 +606,15 @@ class KnapsackSolverGUI(QMainWindow):
 <br>
 <b>Current Test:</b> {test_name}<br>
 <b>Items:</b> {info['N_Items']}<br>
-<b>Capacity:</b> {info['Capacity']}<br>
+<b>Capacity:</b> {info['Sức chứa']}<br>
 <b>Regions:</b> {info['N_Regions']}
 """
         self.problem_info.setHtml(text)
     
     def update_testcase_info(self, info):
         """Update test case info label"""
-        text = f"""Items: {info['N_Items']} | Capacity: {info['Capacity']} | Regions: {info['N_Regions']} | Total Value: {int(info['Total_Value'])}"""
+        text = f"""Vật phẩm: {info['N_Items']} | Sức chứa: {info['Sức chứa']} | Khu vựcs: {info['N_Regions']} | Tổng giá trị: {int(info['Total_Giá trị'])}"""
         self.testcase_info.setText(text)
-    
-    def clear_selection(self):
-        """Clear manual item selection"""
-        if hasattr(self, 'problem_canvas'):
-            self.problem_canvas.selected_items.clear()
-            self.visualize_problem()
-    
-    def visualize_problem(self):
-        """Visualize problem (items distribution)"""
-        if self.test_data_df is None:
-            return
-        
-        try:
-            fig = self.problem_canvas.fig
-            fig.clear()
-            
-            # Create scatter plot
-            ax = fig.add_subplot(111)
-            
-            # Plot all items
-            for idx, row in self.test_data_df.iterrows():
-                color = 'green' if idx in self.problem_canvas.selected_items else 'gray'
-                alpha = 1.0 if idx in self.problem_canvas.selected_items else 0.4
-                
-                ax.scatter(row['weight'], row['value'], 
-                          s=100, c=color, alpha=alpha, edgecolors='black')
-                
-                if idx in self.problem_canvas.selected_items:
-                    ax.annotate(f"Item {idx}", (row['weight'], row['value']),
-                              fontsize=8, ha='center')
-            
-            ax.set_xlabel('Weight', fontsize=12)
-            ax.set_ylabel('Value', fontsize=12)
-            ax.set_title('Items Distribution (Click to Select)', fontsize=14, fontweight='bold')
-            ax.grid(True, alpha=0.3)
-            
-            # Store positions for click detection
-            positions = [(row['weight'], row['value'], idx) 
-                        for idx, row in self.test_data_df.iterrows()]
-            self.problem_canvas.set_clickable(True, positions, self.on_item_clicked)
-            
-            fig.tight_layout()
-            self.problem_canvas.draw()
-            
-        except Exception as e:
-            print(f"Error visualizing problem: {e}")
-    
-    def on_item_clicked(self, item_idx, is_selected):
-        """Handle item click event"""
-        self.visualize_problem()
-        action = "Selected" if is_selected else "Deselected"
-        self.statusBar().showMessage(f'{action} Item {item_idx}')
     
     def run_all_algorithms(self):
         """Run all three algorithms"""
@@ -797,7 +660,7 @@ class KnapsackSolverGUI(QMainWindow):
         
         try:
             for algo in algorithms:
-                self.statusBar().showMessage(f'Running {algo}...')
+                self.statusBar().showMessage(f'Đang chạy {algo}...')
                 QApplication.processEvents()  # Update UI
                 
                 worker = AlgorithmWorker(
@@ -814,7 +677,7 @@ class KnapsackSolverGUI(QMainWindow):
                 worker.wait()
                 
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"Algorithm execution failed:\n{str(e)}")
+            QMessageBox.critical(self, "Lỗi", f"Thuật toán execution failed:\n{str(e)}")
             self.run_all_btn.setEnabled(True)
             self.progress_bar.setVisible(False)
     def on_algorithm_progress(self, message):
@@ -824,13 +687,13 @@ class KnapsackSolverGUI(QMainWindow):
     def on_algorithm_finished(self, result):
         """Handle algorithm completion"""
         if 'error' in result:
-            QMessageBox.critical(self, "Error", f"Algorithm failed:\n{result['error']}")
+            QMessageBox.critical(self, "Lỗi", f"Thuật toán failed:\n{result['error']}")
             return
         
         algo = result['algorithm']
         self.results[algo] = result
         
-        self.statusBar().showMessage(f'{algo} completed: Value={result.get("total_value", 0)}')
+        self.statusBar().showMessage(f'{algo} completed: Giá trị={result.get("total_value", 0)}')
         
         # If all algorithms done
         if len(self.results) == 3:
@@ -854,7 +717,7 @@ class KnapsackSolverGUI(QMainWindow):
             self.populate_solution_table()
             
         except Exception as e:
-            print(f"Error updating visualizations: {e}")
+            print(f"Lỗi updating visualizations: {e}")
     
     def visualize_gbfs_flow(self):
         """Visualize GBFS selection process"""
@@ -869,7 +732,7 @@ class KnapsackSolverGUI(QMainWindow):
                 self.current_test_case
             )
         except Exception as e:
-            print(f"Error visualizing GBFS: {e}")
+            print(f"Lỗi visualizing GBFS: {e}")
             import traceback
             traceback.print_exc()
     
@@ -885,7 +748,7 @@ class KnapsackSolverGUI(QMainWindow):
                 self.test_data_df
             )
         except Exception as e:
-            print(f"Error visualizing BPSO: {e}")
+            print(f"Lỗi visualizing BPSO: {e}")
             import traceback
             traceback.print_exc()
     
@@ -907,21 +770,21 @@ class KnapsackSolverGUI(QMainWindow):
             ax1 = fig.add_subplot(121)
             colors = ['#27ae60', '#3498db', '#e74c3c']
             ax1.bar(algorithms, values, color=colors, alpha=0.7)
-            ax1.set_ylabel('Total Value')
-            ax1.set_title('Solution Quality')
+            ax1.set_ylabel('Tổng giá trị')
+            ax1.set_title('Chất lượng giải pháp')
             ax1.grid(True, alpha=0.3)
             
             ax2 = fig.add_subplot(122)
             ax2.bar(algorithms, times, color=colors, alpha=0.7)
             ax2.set_ylabel('Time (seconds)')
-            ax2.set_title('Execution Time')
+            ax2.set_title('Thời gian thực thi')
             ax2.grid(True, alpha=0.3)
             
             fig.tight_layout()
             self.comparison_canvas.draw()
             
         except Exception as e:
-            print(f"Error visualizing comparison: {e}")
+            print(f"Lỗi visualizing comparison: {e}")
     
     def visualize_regional(self):
         """Visualize regional diversity"""
@@ -963,7 +826,7 @@ class KnapsackSolverGUI(QMainWindow):
                 ax1.bar([f'R{r}' for r in regions], counts, alpha=0.6, label=algo, 
                        color=colors_algo.get(algo, 'gray'))
             
-            ax1.set_xlabel('Region', fontsize=10, fontweight='bold')
+            ax1.set_xlabel('Khu vực', fontsize=10, fontweight='bold')
             ax1.set_ylabel('Number of Items', fontsize=10, fontweight='bold')
             ax1.set_title('Regional Distribution Comparison', fontsize=11, fontweight='bold')
             ax1.legend(fontsize=9)
@@ -1007,11 +870,11 @@ class KnapsackSolverGUI(QMainWindow):
             for i, region in enumerate(sorted(regions_all)):
                 region_items = self.test_data_df[self.test_data_df['region'] == region]
                 ax3.scatter(region_items['weight'], region_items['value'],
-                           s=60, alpha=0.5, c=[cmap(i)], label=f'Region {region}',
+                           s=60, alpha=0.5, c=[cmap(i)], label=f'Khu vực {region}',
                            edgecolors='black', linewidth=0.5)
             
-            ax3.set_xlabel('Weight', fontsize=10, fontweight='bold')
-            ax3.set_ylabel('Value', fontsize=10, fontweight='bold')
+            ax3.set_xlabel('Trọng lượng', fontsize=10, fontweight='bold')
+            ax3.set_ylabel('Giá trị', fontsize=10, fontweight='bold')
             ax3.set_title('All Items by Region', fontsize=11, fontweight='bold')
             ax3.legend(fontsize=8, loc='best', ncol=2)
             ax3.grid(True, alpha=0.3)
@@ -1031,12 +894,12 @@ class KnapsackSolverGUI(QMainWindow):
                 region_selected = selected_items[selected_items['region'] == region]
                 if len(region_selected) > 0:
                     ax4.scatter(region_selected['weight'], region_selected['value'],
-                               s=120, alpha=0.8, c=[cmap(i)], label=f'Region {region}',
+                               s=120, alpha=0.8, c=[cmap(i)], label=f'Khu vực {region}',
                                edgecolors='black', linewidth=2)
             
-            ax4.set_xlabel('Weight', fontsize=10, fontweight='bold')
-            ax4.set_ylabel('Value', fontsize=10, fontweight='bold')
-            ax4.set_title(f'{best_algo} Selection by Region', fontsize=11, fontweight='bold')
+            ax4.set_xlabel('Trọng lượng', fontsize=10, fontweight='bold')
+            ax4.set_ylabel('Giá trị', fontsize=10, fontweight='bold')
+            ax4.set_title(f'{best_algo} Chọnion by Khu vực', fontsize=11, fontweight='bold')
             ax4.legend(fontsize=8, loc='best', ncol=2)
             ax4.grid(True, alpha=0.3)
             
@@ -1044,7 +907,7 @@ class KnapsackSolverGUI(QMainWindow):
             self.regional_canvas.draw()
             
         except Exception as e:
-            print(f"Error visualizing regional: {e}")
+            print(f"Lỗi visualizing regional: {e}")
             import traceback
             traceback.print_exc()
     
@@ -1064,7 +927,7 @@ class KnapsackSolverGUI(QMainWindow):
             self.solution_table.setRowCount(len(selected_items))
             self.solution_table.setColumnCount(6)
             self.solution_table.setHorizontalHeaderLabels([
-                'Item ID', 'Weight', 'Value', 'Region', 'Ratio', 'Algorithm'
+                'Item ID', 'Trọng lượng', 'Giá trị', 'Khu vực', 'Ratio', 'Thuật toán'
             ])
             
             # Populate rows
@@ -1085,7 +948,7 @@ class KnapsackSolverGUI(QMainWindow):
             self.solution_table.resizeColumnsToContents()
             
         except Exception as e:
-            print(f"Error populating table: {e}")
+            print(f"Lỗi populating table: {e}")
     
     def run_chapter3_experiments(self):
         """Run Chapter 3 experiments"""
@@ -1137,49 +1000,49 @@ class KnapsackSolverGUI(QMainWindow):
             if "3.1.1.a" in exp_name:
                 # GBFS Parameters: max_states vs performance
                 ax = fig.add_subplot(111)
-                ax.plot(df['max_states'], df['value'], 'bo-', linewidth=2, markersize=8, label='Value')
+                ax.plot(df['max_states'], df['value'], 'bo-', linewidth=2, markersize=8, label='Giá trị')
                 ax.set_xlabel('Max States', fontsize=12, fontweight='bold')
-                ax.set_ylabel('Value', fontsize=12, fontweight='bold', color='blue')
+                ax.set_ylabel('Giá trị', fontsize=12, fontweight='bold', color='blue')
                 ax.tick_params(axis='y', labelcolor='blue')
                 ax.set_title('GBFS: Impact of Max States Parameter', fontsize=14, fontweight='bold')
                 ax.grid(True, alpha=0.3)
                 
                 # Secondary y-axis for time
                 ax2 = ax.twinx()
-                ax2.plot(df['max_states'], df['time'], 'r^--', linewidth=2, markersize=8, label='Time (s)')
-                ax2.set_ylabel('Time (s)', fontsize=12, fontweight='bold', color='red')
+                ax2.plot(df['max_states'], df['time'], 'r^--', linewidth=2, markersize=8, label='Thời gian (s)')
+                ax2.set_ylabel('Thời gian (s)', fontsize=12, fontweight='bold', color='red')
                 ax2.tick_params(axis='y', labelcolor='red')
                 
             elif "3.1.1.b" in exp_name:
                 # BPSO Swarm Size
                 ax = fig.add_subplot(111)
-                ax.plot(df['param_value'], df['value'], 'go-', linewidth=2, markersize=8, label='Value')
+                ax.plot(df['param_value'], df['value'], 'go-', linewidth=2, markersize=8, label='Giá trị')
                 ax.set_xlabel('Swarm Size (particles)', fontsize=12, fontweight='bold')
-                ax.set_ylabel('Value', fontsize=12, fontweight='bold', color='green')
+                ax.set_ylabel('Giá trị', fontsize=12, fontweight='bold', color='green')
                 ax.tick_params(axis='y', labelcolor='green')
                 ax.set_title('BPSO: Impact of Swarm Size', fontsize=14, fontweight='bold')
                 ax.grid(True, alpha=0.3)
                 
                 # Secondary y-axis for time
                 ax2 = ax.twinx()
-                ax2.plot(df['param_value'], df['time'], 'r^--', linewidth=2, markersize=8, label='Time (s)')
-                ax2.set_ylabel('Time (s)', fontsize=12, fontweight='bold', color='red')
+                ax2.plot(df['param_value'], df['time'], 'r^--', linewidth=2, markersize=8, label='Thời gian (s)')
+                ax2.set_ylabel('Thời gian (s)', fontsize=12, fontweight='bold', color='red')
                 ax2.tick_params(axis='y', labelcolor='red')
                 
             elif "3.1.1.c" in exp_name:
                 # BPSO Iterations
                 ax = fig.add_subplot(111)
-                ax.plot(df['param_value'], df['value'], 'mo-', linewidth=2, markersize=8, label='Value')
+                ax.plot(df['param_value'], df['value'], 'mo-', linewidth=2, markersize=8, label='Giá trị')
                 ax.set_xlabel('Iterations', fontsize=12, fontweight='bold')
-                ax.set_ylabel('Value', fontsize=12, fontweight='bold', color='purple')
+                ax.set_ylabel('Giá trị', fontsize=12, fontweight='bold', color='purple')
                 ax.tick_params(axis='y', labelcolor='purple')
                 ax.set_title('BPSO: Impact of Iteration Count', fontsize=14, fontweight='bold')
                 ax.grid(True, alpha=0.3)
                 
                 # Secondary y-axis for time
                 ax2 = ax.twinx()
-                ax2.plot(df['param_value'], df['time'], 'r^--', linewidth=2, markersize=8, label='Time (s)')
-                ax2.set_ylabel('Time (s)', fontsize=12, fontweight='bold', color='red')
+                ax2.plot(df['param_value'], df['time'], 'r^--', linewidth=2, markersize=8, label='Thời gian (s)')
+                ax2.set_ylabel('Thời gian (s)', fontsize=12, fontweight='bold', color='red')
                 ax2.tick_params(axis='y', labelcolor='red')
                 
             elif "3.1.2" in exp_name:
@@ -1238,7 +1101,7 @@ class KnapsackSolverGUI(QMainWindow):
                 ax1.bar([i + width/2 for i in x], bpso_pct, width, label='BPSO', color='#3498db', alpha=0.7)
                 
                 ax1.set_xlabel('Data Characteristic', fontsize=11, fontweight='bold')
-                ax1.set_ylabel('% of Optimal', fontsize=11, fontweight='bold')
+                ax1.set_ylabel('% Tối ưu', fontsize=11, fontweight='bold')
                 ax1.set_title('Solution Quality by Data Type', fontsize=12, fontweight='bold')
                 ax1.set_xticks(x)
                 ax1.set_xticklabels([c.replace('_', ' ').title() for c in characteristics], 
@@ -1275,13 +1138,13 @@ class KnapsackSolverGUI(QMainWindow):
             
         except Exception as e:
             import traceback
-            print(f"Error loading experiment: {e}")
+            print(f"Lỗi loading experiment: {e}")
             traceback.print_exc()
             
             fig = self.chapter3_canvas.fig
             fig.clear()
             ax = fig.add_subplot(111)
-            ax.text(0.5, 0.5, f'Error loading experiment:\\n{str(e)}',
+            ax.text(0.5, 0.5, f'Lỗi loading experiment:\\n{str(e)}',
                    ha='center', va='center', fontsize=12, color='red')
             self.chapter3_canvas.draw()
     
@@ -1296,11 +1159,11 @@ class KnapsackSolverGUI(QMainWindow):
             data = []
             for algo, result in self.results.items():
                 data.append({
-                    'Algorithm': algo,
-                    'Total Value': result['total_value'],
-                    'Total Weight': result['total_weight'],
+                    'Thuật toán': algo,
+                    'Tổng giá trị': result['total_value'],
+                    'Tổng trọng lượng': result['total_weight'],
                     'Items Selected': len(result['selected_items']),
-                    'Execution Time': result['execution_time']
+                    'Thời gian thực thi': result['execution_time']
                 })
             
             df = pd.DataFrame(data)
@@ -1314,7 +1177,7 @@ class KnapsackSolverGUI(QMainWindow):
                                    f"Results exported to:\n{output_path}")
             
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"Export failed:\n{str(e)}")
+            QMessageBox.critical(self, "Lỗi", f"Xuất failed:\n{str(e)}")
 
 
 # =============================================================================
