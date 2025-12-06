@@ -28,6 +28,7 @@ from src.gbfs_knapsack import solve_knapsack_gbfs
 from src.bpso_knapsack import solve_knapsack_bpso
 from src.dp_knapsack import solve_knapsack_dp
 from src.advanced_visualizer import AdvancedKnapsackVisualizer
+from src.algorithm_flowchart import draw_gbfs_flowchart, draw_bpso_flowchart
 
 
 class MatplotlibCanvas(FigureCanvas):
@@ -422,14 +423,14 @@ class KnapsackGUIEnhanced(QMainWindow):
         self.tab_gbfs_tree_layout = QVBoxLayout(self.tab_gbfs_tree)
         self.canvas_gbfs_tree = MatplotlibCanvas(width=14, height=10)
         self.tab_gbfs_tree_layout.addWidget(self.canvas_gbfs_tree)
-        self.tabs.addTab(self.tab_gbfs_tree, "GBFS State Tree")
+        self.tabs.addTab(self.tab_gbfs_tree, "GBFS Algorithm Flow")
         
         # Tab 5: BPSO Swarm
         self.tab_bpso_swarm = QWidget()
         self.tab_bpso_swarm_layout = QVBoxLayout(self.tab_bpso_swarm)
         self.canvas_bpso_swarm = MatplotlibCanvas(width=14, height=10)
         self.tab_bpso_swarm_layout.addWidget(self.canvas_bpso_swarm)
-        self.tabs.addTab(self.tab_bpso_swarm, "BPSO Swarm")
+        self.tabs.addTab(self.tab_bpso_swarm, "BPSO Algorithm Flow")
         
         # Tab 6: Regional Distribution
         self.tab_regional = QWidget()
@@ -814,119 +815,67 @@ class KnapsackGUIEnhanced(QMainWindow):
             print(f"Error populating table: {e}")
     
     def visualize_gbfs_tree(self):
-        """Visualize GBFS state tree"""
-        if 'gbfs' not in self.results:
-            return
-        
+        """Visualize GBFS flowchart - Google Images style"""
         try:
             fig = self.canvas_gbfs_tree.fig
             fig.clear()
             
-            result = self.results['gbfs']
-            
-            # Always show statistics
+            # Draw GBFS flowchart
             ax = fig.add_subplot(111)
+            draw_gbfs_flowchart(ax)
             
-            info_text = (
-                f"GBFS Algorithm Results\n\n"
-                f"Total States Explored: {result.get('states_explored', 'N/A')}\n"
-                f"Final Value: {result['total_value']:.0f}\n"
-                f"Total Weight: {result['total_weight']:.1f}\n"
-                f"Items Selected: {len(result['selected_items'])}\n"
-                f"Execution Time: {result['execution_time']:.4f}s\n\n"
-            )
+            # Add result statistics if available
+            if 'gbfs' in self.results:
+                result = self.results['gbfs']
+                stats_text = (
+                    f"Current Run Stats:\n"
+                    f"Value: {result['total_value']:.0f} | "
+                    f"States: {result.get('states_explored', 'N/A')} | "
+                    f"Time: {result['execution_time']:.3f}s"
+                )
+                ax.text(0.5, -0.3, stats_text, transform=ax.transAxes,
+                       fontsize=9, ha='center', fontweight='bold',
+                       bbox=dict(boxstyle='round', facecolor='#ecf0f1', alpha=0.8))
             
-            # Check if we have state_tree for visualization
-            if 'state_tree' in result and result['state_tree']:
-                info_text += "State Tree: Available \u2713\n(Tree visualization feature coming soon)"
-                color = '#2ecc71'
-            else:
-                info_text += "State Tree: Not available\n(Algorithm didn't store tree data)"
-                color = '#e74c3c'
-            
-            ax.text(0.5, 0.5, info_text, ha='center', va='center', 
-                   fontsize=13, family='monospace',
-                   bbox=dict(boxstyle='round', facecolor=color, alpha=0.1, pad=1))
-            ax.axis('off')
-            
+            fig.tight_layout()
             self.canvas_gbfs_tree.draw()
             
         except Exception as e:
-            print(f"Error visualizing GBFS tree: {e}")
+            print(f"Error visualizing GBFS flowchart: {e}")
+            import traceback
+            traceback.print_exc()
     
     def visualize_bpso_swarm(self):
-        """Visualize BPSO swarm behavior"""
-        if 'bpso' not in self.results:
-            return
-        
+        """Visualize BPSO flowchart - Google Images style"""
         try:
             fig = self.canvas_bpso_swarm.fig
             fig.clear()
             
-            result = self.results['bpso']
+            # Draw BPSO flowchart
+            ax = fig.add_subplot(111)
+            draw_bpso_flowchart(ax)
             
-            # Check if BPSO has convergence data
-            if 'convergence' in result and 'best_fitness' in result['convergence']:
-                # Plot convergence curve
-                ax = fig.add_subplot(111)
-                history = result['convergence']['best_fitness']
-                iterations = range(1, len(history) + 1)
-                
-                ax.plot(iterations, history, 'b-', linewidth=2.5, label='Best Fitness', marker='o', 
-                       markersize=4, markevery=max(1, len(history)//20))
-                
-                if 'avg_fitness' in result['convergence']:
-                    avg_history = result['convergence']['avg_fitness']
-                    ax.plot(iterations, avg_history, 'r--', linewidth=1.5, alpha=0.7, 
-                           label='Average Fitness', marker='s', markersize=3, 
-                           markevery=max(1, len(avg_history)//20))
-                
-                ax.set_xlabel('Iteration', fontsize=12, fontweight='bold')
-                ax.set_ylabel('Fitness Value', fontsize=12, fontweight='bold')
-                ax.set_title('BPSO Swarm Convergence Behavior', fontsize=14, fontweight='bold', pad=15)
-                ax.legend(loc='lower right', fontsize=10)
-                ax.grid(True, alpha=0.3, linestyle='--')
-                
-                # Add final value annotation
-                final_val = history[-1]
-                ax.annotate(f'Final: {final_val:.0f}', 
-                           xy=(len(history), final_val), 
-                           xytext=(len(history)*0.7, final_val*1.05),
-                           fontsize=10, fontweight='bold',
-                           bbox=dict(boxstyle='round,pad=0.5', facecolor='yellow', alpha=0.7),
-                           arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0.3', lw=1.5))
-            else:
-                # Fallback: show statistics
-                ax = fig.add_subplot(111)
-                info_text = (
-                    f"BPSO Algorithm Results\n\n"
-                    f"Particles: {result.get('n_particles', 'N/A')}\n"
-                    f"Iterations: {result.get('iterations', 'N/A')}\n"
-                    f"Best Value: {result['total_value']:.0f}\n"
-                    f"Total Weight: {result['total_weight']:.1f}\n"
-                    f"Items Selected: {len(result['selected_items'])}\n\n"
-                    "(Swarm history visualization not available)"
+            # Add result statistics if available
+            if 'bpso' in self.results:
+                result = self.results['bpso']
+                stats_text = (
+                    f"Current Run Stats:\n"
+                    f"Value: {result['total_value']:.0f} | "
+                    f"Particles: {result.get('n_particles', 'N/A')} | "
+                    f"Iterations: {result.get('iterations', 'N/A')} | "
+                    f"Time: {result['execution_time']:.3f}s"
                 )
-                ax.text(0.5, 0.5, info_text, ha='center', va='center', 
-                       fontsize=13, family='monospace',
-                       bbox=dict(boxstyle='round', facecolor='#3498db', alpha=0.1, pad=1))
-                ax.axis('off')
+                ax.text(0.5, -0.05, stats_text, transform=ax.transAxes,
+                       fontsize=9, ha='center', fontweight='bold',
+                       bbox=dict(boxstyle='round', facecolor='#ecf0f1', alpha=0.8))
             
             fig.tight_layout()
             self.canvas_bpso_swarm.draw()
             
         except Exception as e:
-            print(f"Error visualizing BPSO swarm: {e}")
-    
-    def visualize_regional_distribution(self):
-        """Visualize regional distribution of selected items"""
-        if len(self.results) == 0 or self.current_test_data is None:
-            return
-        
-        try:
-            fig = self.canvas_regional.fig
-            fig.clear()
-            
+            print(f"Error visualizing BPSO flowchart: {e}")
+            import traceback
+            traceback.print_exc()
             # Use BPSO result as default
             best_solution = self.results.get('bpso', self.results.get('gbfs', self.results.get('dp')))
             
