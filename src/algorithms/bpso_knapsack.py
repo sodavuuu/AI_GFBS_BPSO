@@ -174,6 +174,8 @@ class KnapsackBPSO:
             'region_coverage': region_coverage,
             'regions_covered': regions_covered,
             'execution_time': elapsed,
+            'best_fitness_history': self.best_fitness_history,  # For visualization (top level)
+            'avg_fitness_history': self.avg_fitness_history,
             'convergence': {
                 'best_fitness': self.best_fitness_history,
                 'avg_fitness': self.avg_fitness_history

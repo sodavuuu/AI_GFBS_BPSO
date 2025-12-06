@@ -21,6 +21,7 @@ import numpy as np
 import pandas as pd
 from typing import List, Dict, Tuple
 import os
+import json
 
 # Set style
 sns.set_style("whitegrid")
@@ -65,9 +66,9 @@ class AdvancedKnapsackVisualizer:
                 marker='o', linewidth=2, markersize=8, color=self.colors['gbfs'])
         ax1.fill_between(results_df['max_states'], results_df['value'], 
                          alpha=0.3, color=self.colors['gbfs'])
-        ax1.set_xlabel('Số trạng thái tối đa (Giới hạn độ sâu)', fontweight='bold')
+        ax1.set_xlabel('Số trạng thái tối đa', fontweight='bold')  # Shorter label
         ax1.set_ylabel('Tổng giá trị', fontweight='bold')
-        ax1.set_title('GBFS: Ảnh hưởng của Max States đến chất lượng giải pháp', fontweight='bold', pad=15)
+        ax1.set_title('GBFS: Ảnh hưởng Max States đến chất lượng', fontweight='bold', pad=10)  # Shorter, less pad
         ax1.grid(True, alpha=0.3)
         
         # Thêm annotation cho best value
@@ -139,6 +140,8 @@ class AdvancedKnapsackVisualizer:
         Args:
             results_df: DataFrame với columns [param_value, value, time, convergence_iter, best_fitness_history]
             param_name: 'n_particles', 'max_iterations', 'w', 'c1', 'c2'
+            
+        Note: Nếu best_fitness_history không có trong results_df, sẽ tìm file JSON tương ứng
         """
         param_labels = {
             'n_particles': 'Kích thước bầy đàn (Số hạt)',
@@ -148,26 +151,65 @@ class AdvancedKnapsackVisualizer:
             'c2': 'Hệ số xã hội (c₂)'
         }
         
-        fig = plt.figure(figsize=(16, 10))
-        gs = GridSpec(2, 2, figure=fig, hspace=0.3, wspace=0.3)
+        # Try to load history from JSON if not in DataFrame
+        if 'best_fitness_history' not in results_df.columns or \
+           results_df['best_fitness_history'].iloc[0] is None or \
+           (isinstance(results_df['best_fitness_history'].iloc[0], float) and 
+            pd.isna(results_df['best_fitness_history'].iloc[0])):
+            
+            # Try to find JSON file
+            if save_path:
+                base_dir = os.path.dirname(save_path)
+                base_name = os.path.basename(save_path).replace('.png', '_history.json')
+                json_path = os.path.join(base_dir, base_name)
+                
+                if os.path.exists(json_path):
+                    print(f"  → Loading history from {json_path}")
+                    with open(json_path, 'r') as f:
+                        history_data = json.load(f)
+                    
+                    # Merge history into DataFrame
+                    for idx, row in results_df.iterrows():
+                        for hist_item in history_data['results']:
+                            if hist_item['param_value'] == row['param_value']:
+                                results_df.at[idx, 'best_fitness_history'] = hist_item['best_fitness_history']
+                                break
+        
+        fig = plt.figure(figsize=(16, 12))  # Tăng height để tránh overlap
+        gs = GridSpec(2, 2, figure=fig, hspace=0.4, wspace=0.3)  # Tăng hspace
         
         param_col = 'param_value'
         
         # Plot 1: Convergence curves for different parameter values
         ax1 = fig.add_subplot(gs[0, :])
         
+        has_history = False
         for idx, row in results_df.iterrows():
             history = row.get('best_fitness_history', [])
-            if len(history) > 0:
+            if len(history) > 0 and isinstance(history, (list, np.ndarray)):
+                has_history = True
                 label = f"{param_labels.get(param_name, param_name)} = {row[param_col]}"
-                ax1.plot(history, linewidth=2, marker='o', markersize=4, 
-                        markevery=max(1, len(history)//10), label=label, alpha=0.8)
+                # Convert normalized fitness (0-1) to approximate actual value
+                # Scale by observed final value for better visualization
+                actual_value = row.get('value', max(history) if len(history) > 0 else 1)
+                if max(history) > 0:
+                    scaled_history = [h * actual_value / max(history) for h in history]
+                else:
+                    scaled_history = history
+                ax1.plot(scaled_history, linewidth=2, marker='o', markersize=4, 
+                        markevery=max(1, len(scaled_history)//10), label=label, alpha=0.8)
         
         ax1.set_xlabel('Vòng lặp', fontweight='bold')
-        ax1.set_ylabel('Độ thích nghi tốt nhất', fontweight='bold')
+        ax1.set_ylabel('Giá trị tốt nhất (ước lượng)', fontweight='bold')
         ax1.set_title(f'BPSO: So sánh hội tụ - {param_labels.get(param_name, param_name)}', 
                      fontweight='bold', pad=15)
-        ax1.legend(loc='best', frameon=True, shadow=True)
+        if has_history:
+            ax1.legend(loc='lower right', frameon=True, shadow=True, fontsize=9)
+        else:
+            # If no history data, show message
+            ax1.text(0.5, 0.5, 'Không có dữ liệu hội tụ\n(History không được lưu trong CSV)',
+                    ha='center', va='center', fontsize=12, transform=ax1.transAxes,
+                    bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
         ax1.grid(True, alpha=0.3)
         
         # Plot 2: Final value vs parameter
@@ -206,17 +248,24 @@ class AdvancedKnapsackVisualizer:
                       color=self.colors['bpso'], alpha=0.7, edgecolor='black', linewidth=1.5)
         
         # Color code: faster = greener
-        max_speed = max(convergence_speeds)
-        for bar, speed in zip(bars, convergence_speeds):
-            bar.set_color(plt.cm.RdYlGn_r(speed / max_speed))
+        max_speed = max(convergence_speeds) if convergence_speeds else 1
+        if max_speed > 0:
+            for bar, speed in zip(bars, convergence_speeds):
+                bar.set_color(plt.cm.RdYlGn_r(speed / max_speed))
         
         ax3.set_xlabel(param_labels.get(param_name, param_name), fontweight='bold')
         ax3.set_ylabel('Số vòng lặp để đạt 95% giá trị cuối', fontweight='bold')
         ax3.set_title('Phân tích tốc độ hội tụ', fontweight='bold', pad=15)
         ax3.grid(True, alpha=0.3, axis='y')
         
-        plt.suptitle(f'3.1.1.b: Phân tích tham số BPSO - Ảnh hưởng {param_labels.get(param_name, param_name)}', 
-                    fontsize=16, fontweight='bold', y=0.98)
+        # Shorter title to avoid overlap
+        title_map = {
+            'n_particles': '3.1.1.b: BPSO - Ảnh hưởng Kích thước Bầy đàn',
+            'max_iterations': '3.1.1.c: BPSO - Ảnh hưởng Số Vòng lặp',
+            'w': '3.1.1.d: BPSO - Ảnh hưởng Trọng số Quán tính (w)'
+        }
+        title = title_map.get(param_name, f'3.1.1: BPSO - {param_labels.get(param_name, param_name)}')
+        plt.suptitle(title, fontsize=16, fontweight='bold', y=0.99)
         
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
@@ -226,6 +275,58 @@ class AdvancedKnapsackVisualizer:
     # =========================================================================
     # 3.1.2. ẢNH HƯỞNG CỦA THUẬT TOÁN (Algorithm Comparison)
     # =========================================================================
+    
+    def plot_algorithm_comparison_gbfs_bpso(self, gbfs_result: Dict, bpso_result: Dict, save_path=None):
+        """
+        So sánh GBFS vs BPSO only (2 algorithms)
+        
+        Args:
+            gbfs_result: Dict từ solve_knapsack_gbfs()
+            bpso_result: Dict từ solve_knapsack_bpso()
+            save_path: Path để save figure
+        """
+        fig, axes = plt.subplots(1, 3, figsize=(16, 5))
+        
+        algorithms = ['GBFS', 'BPSO']
+        values = [gbfs_result['total_value'], bpso_result['total_value']]
+        times = [gbfs_result['execution_time'], bpso_result['execution_time']]
+        colors = [self.colors['gbfs'], self.colors['bpso']]
+        
+        # Plot 1: Solution Quality
+        axes[0].bar(algorithms, values, color=colors, alpha=0.7, edgecolor='black', linewidth=2)
+        axes[0].set_ylabel('Total Value', fontweight='bold')
+        axes[0].set_title('Solution Quality\n(Higher is Better)', fontweight='bold')
+        axes[0].grid(True, alpha=0.3, axis='y')
+        for i, val in enumerate(values):
+            axes[0].text(i, val, f'{val:.0f}', ha='center', va='bottom', fontweight='bold')
+        
+        # Plot 2: Execution Time
+        axes[1].bar(algorithms, [t*1000 for t in times], color=colors, alpha=0.7, edgecolor='black', linewidth=2)
+        axes[1].set_ylabel('Time (ms)', fontweight='bold')
+        axes[1].set_title('Computational Cost\n(Lower is Better)', fontweight='bold')
+        axes[1].set_yscale('log')
+        axes[1].grid(True, alpha=0.3, axis='y')
+        for i, t in enumerate(times):
+            axes[1].text(i, t*1000, f'{t*1000:.2f}ms', ha='center', va='bottom', fontweight='bold')
+        
+        # Plot 3: Trade-off Scatter
+        for i, algo in enumerate(algorithms):
+            axes[2].scatter(times[i]*1000, values[i], s=400, color=colors[i], 
+                          alpha=0.7, edgecolors='black', linewidth=2, label=algo)
+            axes[2].annotate(algo, xy=(times[i]*1000, values[i]), 
+                           xytext=(10, 10), textcoords='offset points', fontweight='bold')
+        axes[2].set_xlabel('Time (ms, log scale)', fontweight='bold')
+        axes[2].set_ylabel('Total Value', fontweight='bold')
+        axes[2].set_title('Quality vs Speed\n(Top-Left is Best)', fontweight='bold')
+        axes[2].set_xscale('log')
+        axes[2].grid(True, alpha=0.3)
+        axes[2].legend()
+        
+        plt.tight_layout()
+        if save_path:
+            plt.savefig(save_path, dpi=150, bbox_inches='tight')
+        plt.show()
+        return fig
     
     def plot_algorithm_comparison_detailed(self, gbfs_result: Dict, bpso_result: Dict, 
                                           dp_result: Dict, bpso_variant_result: Dict = None, 
@@ -404,20 +505,20 @@ class AdvancedKnapsackVisualizer:
     
     def plot_data_characteristics_impact(self, results_dict: Dict[str, Dict], save_path=None):
         """
-        Vẽ ảnh hưởng của đặc điểm dữ liệu
+        Vẽ ảnh hưởng của đặc điểm dữ liệu (GBFS vs BPSO only)
         
         Args:
             results_dict: {
-                'low_correlation': {'gbfs': {...}, 'bpso': {...}, 'dp': {...}},
-                'high_correlation': {'gbfs': {...}, 'bpso': {...}, 'dp': {...}},
-                'high_value': {'gbfs': {...}, 'bpso': {...}, 'dp': {...}}
+                'low_correlation': {'gbfs': {...}, 'bpso': {...}},
+                'high_correlation': {'gbfs': {...}, 'bpso': {...}},
+                'high_value': {'gbfs': {...}, 'bpso': {...}}
             }
         """
         fig = plt.figure(figsize=(18, 12))
         gs = GridSpec(3, 3, figure=fig, hspace=0.35, wspace=0.35)
         
         data_types = list(results_dict.keys())
-        algorithms = ['gbfs', 'bpso', 'dp']
+        algorithms = ['gbfs', 'bpso']  # Only 2 algorithms now
         
         # Prepare data for plotting
         values_by_algo = {alg: [] for alg in algorithms}
@@ -436,12 +537,13 @@ class AdvancedKnapsackVisualizer:
         ax1 = fig.add_subplot(gs[0, :])
         
         x = np.arange(len(data_types))
-        width = 0.25
+        width = 0.35  # Wider bars for 2 algorithms
         
         for i, alg in enumerate(algorithms):
-            offset = (i - 1) * width
+            offset = (i - 0.5) * width  # Center bars for 2 algorithms
             bars = ax1.bar(x + offset, values_by_algo[alg], width, 
-                          label=alg.upper(), alpha=0.8, edgecolor='black')
+                          label=alg.upper(), alpha=0.8, edgecolor='black',
+                          color=self.colors[alg])
         
         ax1.set_ylabel('Tổng giá trị', fontweight='bold', fontsize=12)
         ax1.set_title('Solution Quality: Impact of Data Characteristics', fontweight='bold', pad=15, fontsize=13)
@@ -454,9 +556,10 @@ class AdvancedKnapsackVisualizer:
         ax2 = fig.add_subplot(gs[1, :])
         
         for i, alg in enumerate(algorithms):
-            offset = (i - 1) * width
+            offset = (i - 0.5) * width  # Center bars for 2 algorithms
             bars = ax2.bar(x + offset, times_by_algo[alg], width, 
-                          label=alg.upper(), alpha=0.8, edgecolor='black')
+                          label=alg.upper(), alpha=0.8, edgecolor='black',
+                          color=self.colors[alg])
         
         ax2.set_ylabel('Execution Time (seconds)', fontweight='bold', fontsize=12)
         ax2.set_title('Computational Cost: Impact of Data Characteristics', fontweight='bold', pad=15, fontsize=13)
@@ -503,7 +606,7 @@ class AdvancedKnapsackVisualizer:
         ax4 = fig.add_subplot(gs[2, 1:])
         ax4.axis('off')
         
-        # Create ranking table
+        # Create ranking table (2 algorithms only)
         ranking_data = [['Data Type'] + [a.upper() for a in algorithms]]
         
         for i, data_type in enumerate(data_types):
@@ -521,14 +624,15 @@ class AdvancedKnapsackVisualizer:
             row_data.extend(ranks)
             ranking_data.append(row_data)
         
+        # Table with 3 columns (1 data type + 2 algorithms)
         table = ax4.table(cellText=ranking_data, cellLoc='center', loc='center',
-                         colWidths=[0.25, 0.25, 0.25, 0.25])
+                         colWidths=[0.33, 0.33, 0.33])
         table.auto_set_font_size(False)
         table.set_fontsize(11)
         table.scale(1, 2.5)
         
-        # Style header
-        for i in range(4):
+        # Style header (3 columns now)
+        for i in range(3):
             table[(0, i)].set_facecolor('#2c3e50')
             table[(0, i)].set_text_props(weight='bold', color='white')
         
@@ -799,12 +903,12 @@ class AdvancedKnapsackVisualizer:
         return fig
     
     # =========================================================================
-    # 3.1.3. DATA CHARACTERISTICS IMPACT
+    # 3.1.3. DATA CHARACTERISTICS IMPACT (Alternative DataFrame-based version)
     # =========================================================================
     
-    def plot_data_characteristics_impact(self, df_data: pd.DataFrame, title=None, save_path=None):
+    def plot_data_characteristics_impact_from_df(self, df_data: pd.DataFrame, title=None, save_path=None):
         """
-        Analyze impact of data characteristics on algorithm performance
+        Analyze impact of data characteristics on algorithm performance (DataFrame version)
         
         Args:
             df_data: DataFrame with columns [characteristic, test_case, gbfs_value, gbfs_time, 

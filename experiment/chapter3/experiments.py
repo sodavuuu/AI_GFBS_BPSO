@@ -20,13 +20,14 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 import numpy as np
 import pandas as pd
 import time
+import json
 from src.utils import TestCaseLoader
 from src.algorithms import solve_knapsack_gbfs, solve_knapsack_bpso
 from src.visualization import AdvancedKnapsackVisualizer
 
 
 class Chapter3Experiments:
-    """Quản lý experiments cho Chương 3 - Theo phong cách GA_TSP"""
+    """Quản lý experiments cho Chương """
     
     def __init__(self, output_dir='results/chapter3'):
         self.output_dir = output_dir
@@ -41,7 +42,7 @@ class Chapter3Experiments:
     def experiment_3_1_1_a_gbfs_parameters(self):
         """
         Test GBFS với các max_states khác nhau
-        Tương tự GA_TSP test population size impact
+        
         """
         print("\n" + "="*70)
         print("3.1.1.a: GBFS PARAMETER ANALYSIS - Max States Impact")
@@ -113,7 +114,7 @@ class Chapter3Experiments:
     def experiment_3_1_1_b_bpso_swarm_size(self):
         """
         Test BPSO với các swarm size khác nhau
-        Tương tự GA_TSP test population size
+        
         """
         print("\n" + "="*70)
         print("3.1.1.b: BPSO PARAMETER ANALYSIS - Swarm Size Impact")
@@ -174,6 +175,24 @@ class Chapter3Experiments:
         df_save.to_csv(csv_path, index=False)
         print(f"✓ Saved CSV: {csv_path}")
         
+        # Save history to JSON for visualization
+        history_data = {
+            'experiment': '3_1_1_b_bpso_swarm_size',
+            'param_name': 'n_particles',
+            'results': [
+                {
+                    'param_value': r['param_value'],
+                    'value': r['value'],
+                    'best_fitness_history': r['best_fitness_history']
+                }
+                for r in results
+            ]
+        }
+        json_path = os.path.join(self.output_dir, '3_1_1_b_bpso_swarm_size_history.json')
+        with open(json_path, 'w') as f:
+            json.dump(history_data, f, indent=2)
+        print(f"✓ Saved History JSON: {json_path}")
+        
         # Generate visualization
         df_plot = pd.DataFrame(results)
         fig_path = os.path.join(self.output_dir, '3_1_1_b_bpso_swarm_size.png')
@@ -211,6 +230,7 @@ class Chapter3Experiments:
                     test_case_run['weights'],
                     test_case_run['values'],
                     test_case_run['capacity'],
+                    regions=test_case_run.get('regions'),
                     n_particles=30, max_iterations=max_iter
                 )
                 runs.append(result)
@@ -230,12 +250,30 @@ class Chapter3Experiments:
             
             print(f"  → Mean Value: {np.mean(values):.2f}, Time: {np.mean(times):.4f}s\n")
         
-        # Save
+        # Save CSV
         df_save = pd.DataFrame([{k: v for k, v in r.items() if k != 'best_fitness_history'} 
                                for r in results])
         csv_path = os.path.join(self.output_dir, '3_1_1_c_bpso_iterations.csv')
         df_save.to_csv(csv_path, index=False)
         print(f"✓ Saved CSV: {csv_path}")
+        
+        # Save history to JSON
+        history_data = {
+            'experiment': '3_1_1_c_bpso_iterations',
+            'param_name': 'max_iterations',
+            'results': [
+                {
+                    'param_value': r['param_value'],
+                    'value': r['value'],
+                    'best_fitness_history': r['best_fitness_history']
+                }
+                for r in results
+            ]
+        }
+        json_path = os.path.join(self.output_dir, '3_1_1_c_bpso_iterations_history.json')
+        with open(json_path, 'w') as f:
+            json.dump(history_data, f, indent=2)
+        print(f"✓ Saved History JSON: {json_path}")
         
         # Visualize
         df_plot = pd.DataFrame(results)
@@ -252,12 +290,14 @@ class Chapter3Experiments:
         print("="*70)
         
         test_case = self.loader.load_test_case('Size Medium 50')
-        items, weights, values, capacity = (
+        items, weights, values, capacity, regions = (
             test_case['items'], test_case['weights'], 
-            test_case['values'], test_case['capacity']
+            test_case['values'], test_case['capacity'],
+            test_case.get('regions')
         )
         
-        print(f"\nTest Case: Size Medium 50\n")
+        print(f"\nTest Case: Size Medium 50")
+        print(f"Items: {len(items)}, Capacity: {capacity}\n")
         
         results = []
         w_values = [0.3, 0.5, 0.7, 0.9]
@@ -267,8 +307,14 @@ class Chapter3Experiments:
             
             runs = []
             for run_id in range(5):
-                result = solve_knapsack_bpso(items, weights, values, capacity, 
-                                   n_particles=30, max_iterations=50, w=w)
+                # Reload để tránh mutation
+                test_case_run = self.loader.load_test_case('Size Medium 50')
+                result = solve_knapsack_bpso(
+                    test_case_run['items'], test_case_run['weights'], 
+                    test_case_run['values'], test_case_run['capacity'],
+                    regions=test_case_run.get('regions'),
+                    n_particles=30, max_iterations=50, w=w
+                )
                 runs.append(result)
             
             values = [r['total_value'] for r in runs]
@@ -284,14 +330,32 @@ class Chapter3Experiments:
                 'best_fitness_history': best_run.get('best_fitness_history', [])
             })
             
-            print(f"  → Mean Value: {np.mean(values):.2f}\n")
+            print(f"  → Mean Value: {np.mean(values):.2f}, Time: {np.mean(times):.4f}s\n")
         
-        # Save
+        # Save CSV
         df_save = pd.DataFrame([{k: v for k, v in r.items() if k != 'best_fitness_history'} 
                                for r in results])
         csv_path = os.path.join(self.output_dir, '3_1_1_d_bpso_w.csv')
         df_save.to_csv(csv_path, index=False)
         print(f"✓ Saved CSV: {csv_path}")
+        
+        # Save history to JSON
+        history_data = {
+            'experiment': '3_1_1_d_bpso_w',
+            'param_name': 'w',
+            'results': [
+                {
+                    'param_value': r['param_value'],
+                    'value': r['value'],
+                    'best_fitness_history': r['best_fitness_history']
+                }
+                for r in results
+            ]
+        }
+        json_path = os.path.join(self.output_dir, '3_1_1_d_bpso_w_history.json')
+        with open(json_path, 'w') as f:
+            json.dump(history_data, f, indent=2)
+        print(f"✓ Saved History JSON: {json_path}")
         
         # Visualize
         df_plot = pd.DataFrame(results)
