@@ -683,6 +683,244 @@ class AdvancedKnapsackVisualizer:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
         
         return fig
+    
+    # =========================================================================
+    # 3.1.2. ALGORITHM COMPARISON
+    # =========================================================================
+    
+    def plot_algorithm_comparison(self, df_comparison: pd.DataFrame, title=None, save_path=None):
+        """
+        Comprehensive algorithm comparison visualization
+        Like GA_TSP comparing GA vs RLGA vs GA+SA
+        
+        Args:
+            df_comparison: DataFrame with columns [algorithm, value_mean, value_std, time_mean, pct_optimal]
+        """
+        fig = plt.figure(figsize=(16, 12))
+        gs = GridSpec(3, 3, figure=fig, hspace=0.35, wspace=0.35)
+        
+        algorithms = df_comparison['algorithm'].tolist()
+        colors = [self.colors.get(algo.lower(), '#95a5a6') for algo in algorithms]
+        
+        # Plot 1: Solution Quality Comparison (Bar chart)
+        ax1 = fig.add_subplot(gs[0, 0])
+        values = df_comparison['value_mean'].values
+        bars = ax1.bar(algorithms, values, color=colors, alpha=0.7, edgecolor='black', linewidth=1.5)
+        
+        # Add value labels on bars
+        for bar, val in zip(bars, values):
+            height = bar.get_height()
+            ax1.text(bar.get_x() + bar.get_width()/2., height,
+                    f'{val:.0f}', ha='center', va='bottom', fontweight='bold', fontsize=10)
+        
+        ax1.set_ylabel('Total Value', fontsize=11, fontweight='bold')
+        ax1.set_title('Solution Quality Comparison', fontsize=12, fontweight='bold', pad=10)
+        ax1.grid(True, alpha=0.3, axis='y')
+        
+        # Plot 2: Computational Cost (Log scale)
+        ax2 = fig.add_subplot(gs[0, 1])
+        times = df_comparison['time_mean'].values
+        bars = ax2.bar(algorithms, times, color=colors, alpha=0.7, edgecolor='black', linewidth=1.5)
+        
+        for bar, t in zip(bars, times):
+            height = bar.get_height()
+            ax2.text(bar.get_x() + bar.get_width()/2., height,
+                    f'{t:.4f}s', ha='center', va='bottom', fontweight='bold', fontsize=9)
+        
+        ax2.set_ylabel('Execution Time (seconds)', fontsize=11, fontweight='bold')
+        ax2.set_title('Computational Cost Comparison', fontsize=12, fontweight='bold', pad=10)
+        ax2.set_yscale('log')
+        ax2.grid(True, alpha=0.3, axis='y')
+        
+        # Plot 3: Algorithm Efficiency (Value/Time)
+        ax3 = fig.add_subplot(gs[0, 2])
+        efficiency = values / np.maximum(times, 1e-10)
+        bars = ax3.bar(algorithms, efficiency, color=colors, alpha=0.7, edgecolor='black', linewidth=1.5)
+        ax3.set_ylabel('Efficiency (Value/Time)', fontsize=11, fontweight='bold')
+        ax3.set_title('Algorithm Efficiency', fontsize=12, fontweight='bold', pad=10)
+        ax3.grid(True, alpha=0.3, axis='y')
+        ax3.set_yscale('log')
+        
+        # Plot 4: Quality vs Speed Trade-off (Scatter)
+        ax4 = fig.add_subplot(gs[1, :2])
+        for i, algo in enumerate(algorithms):
+            ax4.scatter(times[i], values[i], s=500, c=colors[i], 
+                       edgecolors='black', linewidth=2, alpha=0.8, label=algo)
+            ax4.text(times[i], values[i], algo, ha='center', va='center',
+                    fontsize=10, fontweight='bold', color='white')
+        
+        ax4.set_xlabel('Execution Time (seconds)', fontsize=12, fontweight='bold')
+        ax4.set_ylabel('Total Value', fontsize=12, fontweight='bold')
+        ax4.set_title('Quality vs Speed Trade-off', fontsize=13, fontweight='bold', pad=15)
+        ax4.set_xscale('log')
+        ax4.legend(loc='best', fontsize=10, frameon=True, shadow=True)
+        ax4.grid(True, alpha=0.3)
+        
+        # Plot 5: Summary Table
+        ax5 = fig.add_subplot(gs[1, 2])
+        ax5.axis('off')
+        
+        summary_data = [['Algorithm', 'Value', 'Time (s)', 'Efficiency', '% of Optimal', 'Ranking']]
+        
+        # Sort by value for ranking
+        sorted_df = df_comparison.sort_values('value_mean', ascending=False)
+        for rank, (_, row) in enumerate(sorted_df.iterrows(), 1):
+            emoji = '🥇' if rank == 1 else '🥈' if rank == 2 else '🥉'
+            summary_data.append([
+                row['algorithm'],
+                f"{row['value_mean']:.0f}",
+                f"{row['time_mean']:.4f}",
+                f"{row['value_mean']/row['time_mean']:.0f}",
+                f"{row['pct_optimal']:.2f}%",
+                f"{emoji}"
+            ])
+        
+        table = ax5.table(cellText=summary_data, cellLoc='center', loc='center',
+                         colWidths=[0.15, 0.15, 0.15, 0.15, 0.20, 0.10])
+        table.auto_set_font_size(False)
+        table.set_fontsize(9)
+        table.scale(1, 2.5)
+        
+        # Style header
+        for i in range(6):
+            table[(0, i)].set_facecolor('#2c3e50')
+            table[(0, i)].set_text_props(weight='bold', color='white')
+        
+        # Highlight winner
+        table[(1, 0)].set_facecolor('#fff9c4')
+        
+        # Add overall title
+        if title:
+            plt.suptitle(title, fontsize=16, fontweight='bold', y=0.98)
+        
+        if save_path:
+            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        
+        return fig
+    
+    # =========================================================================
+    # 3.1.3. DATA CHARACTERISTICS IMPACT
+    # =========================================================================
+    
+    def plot_data_characteristics_impact(self, df_data: pd.DataFrame, title=None, save_path=None):
+        """
+        Analyze impact of data characteristics on algorithm performance
+        
+        Args:
+            df_data: DataFrame with columns [characteristic, test_case, gbfs_value, gbfs_time, 
+                                             bpso_value, bpso_time, dp_value, dp_time, 
+                                             gbfs_pct_optimal, bpso_pct_optimal]
+        """
+        fig = plt.figure(figsize=(18, 12))
+        gs = GridSpec(3, 2, figure=fig, hspace=0.35, wspace=0.3)
+        
+        # Get unique characteristics
+        characteristics = df_data['characteristic'].unique()
+        
+        # Plot 1: Solution Quality by Characteristic
+        ax1 = fig.add_subplot(gs[0, :])
+        x = np.arange(len(characteristics))
+        width = 0.25
+        
+        gbfs_values = [df_data[df_data['characteristic']==c]['gbfs_value'].mean() for c in characteristics]
+        bpso_values = [df_data[df_data['characteristic']==c]['bpso_value'].mean() for c in characteristics]
+        dp_values = [df_data[df_data['characteristic']==c]['dp_value'].mean() for c in characteristics]
+        
+        ax1.bar(x - width, gbfs_values, width, label='GBFS', color=self.colors['gbfs'], alpha=0.8, edgecolor='black')
+        ax1.bar(x, bpso_values, width, label='BPSO', color=self.colors['bpso'], alpha=0.8, edgecolor='black')
+        ax1.bar(x + width, dp_values, width, label='DP', color=self.colors['dp'], alpha=0.8, edgecolor='black')
+        
+        ax1.set_xlabel('Data Characteristic', fontsize=12, fontweight='bold')
+        ax1.set_ylabel('Total Value', fontsize=12, fontweight='bold')
+        ax1.set_title('Solution Quality: Impact of Data Characteristics', fontsize=14, fontweight='bold', pad=15)
+        ax1.set_xticks(x)
+        ax1.set_xticklabels([c.replace('_', ' ').title() for c in characteristics], rotation=15, ha='right')
+        ax1.legend(fontsize=11, loc='upper left')
+        ax1.grid(True, alpha=0.3, axis='y')
+        
+        # Plot 2: Computational Cost by Characteristic
+        ax2 = fig.add_subplot(gs[1, :])
+        
+        gbfs_times = [df_data[df_data['characteristic']==c]['gbfs_time'].mean() for c in characteristics]
+        bpso_times = [df_data[df_data['characteristic']==c]['bpso_time'].mean() for c in characteristics]
+        dp_times = [df_data[df_data['characteristic']==c]['dp_time'].mean() for c in characteristics]
+        
+        ax2.bar(x - width, gbfs_times, width, label='GBFS', color=self.colors['gbfs'], alpha=0.8, edgecolor='black')
+        ax2.bar(x, bpso_times, width, label='BPSO', color=self.colors['bpso'], alpha=0.8, edgecolor='black')
+        ax2.bar(x + width, dp_times, width, label='DP', color=self.colors['dp'], alpha=0.8, edgecolor='black')
+        
+        ax2.set_xlabel('Data Characteristic', fontsize=12, fontweight='bold')
+        ax2.set_ylabel('Execution Time (seconds)', fontsize=12, fontweight='bold')
+        ax2.set_title('Computational Cost: Impact of Data Characteristics', fontsize=14, fontweight='bold', pad=15)
+        ax2.set_yscale('log')
+        ax2.set_xticks(x)
+        ax2.set_xticklabels([c.replace('_', ' ').title() for c in characteristics], rotation=15, ha='right')
+        ax2.legend(fontsize=11, loc='upper left')
+        ax2.grid(True, alpha=0.3, axis='y')
+        
+        # Plot 3: Performance Degradation (% from optimal)
+        ax3 = fig.add_subplot(gs[2, 0])
+        
+        gbfs_degradation = [100 - df_data[df_data['characteristic']==c]['gbfs_pct_optimal'].mean() 
+                           for c in characteristics]
+        bpso_degradation = [100 - df_data[df_data['characteristic']==c]['bpso_pct_optimal'].mean() 
+                           for c in characteristics]
+        
+        x_pos = np.arange(len(characteristics))
+        bars1 = ax3.bar(x_pos - 0.2, gbfs_degradation, 0.4, label='GBFS', 
+                       color='#e74c3c', alpha=0.7, edgecolor='black')
+        bars2 = ax3.bar(x_pos + 0.2, bpso_degradation, 0.4, label='BPSO', 
+                       color='#c0392b', alpha=0.7, edgecolor='black')
+        
+        # Add percentage labels
+        for bars in [bars1, bars2]:
+            for bar in bars:
+                height = bar.get_height()
+                if height > 0.5:  # Only show if significant
+                    ax3.text(bar.get_x() + bar.get_width()/2., height,
+                            f'{height:.1f}%', ha='center', va='bottom', fontsize=8)
+        
+        ax3.set_xlabel('Data Characteristic', fontsize=11, fontweight='bold')
+        ax3.set_ylabel('Performance Degradation (%)', fontsize=11, fontweight='bold')
+        ax3.set_title('Sensitivity to Data Correlation', fontsize=12, fontweight='bold', pad=10)
+        ax3.set_xticks(x_pos)
+        ax3.set_xticklabels([c.replace('_', ' ').title() for c in characteristics], 
+                           rotation=30, ha='right', fontsize=9)
+        ax3.legend(fontsize=10)
+        ax3.grid(True, alpha=0.3, axis='y')
+        
+        # Plot 4: Summary Table
+        ax4 = fig.add_subplot(gs[2, 1])
+        ax4.axis('off')
+        
+        table_data = [['Data Type', 'GBFS', 'BPSO', 'DP']]
+        for c in characteristics:
+            subset = df_data[df_data['characteristic'] == c]
+            table_data.append([
+                c.replace('_', ' ').title(),
+                f"{subset['gbfs_pct_optimal'].mean():.2f}%",
+                f"{subset['bpso_pct_optimal'].mean():.2f}%",
+                "100.00%"
+            ])
+        
+        table = ax4.table(cellText=table_data, cellLoc='center', loc='center',
+                         colWidths=[0.35, 0.2, 0.2, 0.2])
+        table.auto_set_font_size(False)
+        table.set_fontsize(10)
+        table.scale(1, 2.5)
+        
+        # Style header
+        for i in range(4):
+            table[(0, i)].set_facecolor('#2c3e50')
+            table[(0, i)].set_text_props(weight='bold', color='white')
+        
+        if title:
+            plt.suptitle(title, fontsize=16, fontweight='bold', y=0.98)
+        
+        if save_path:
+            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        
+        return fig
 
 
 def demo_visualizations():

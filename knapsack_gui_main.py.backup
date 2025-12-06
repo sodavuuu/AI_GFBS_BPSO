@@ -492,7 +492,7 @@ class KnapsackGUIEnhanced(QMainWindow):
         exp_info.setStyleSheet("font-weight: bold; font-size: 12px;")
         exp_header.addWidget(exp_info)
         
-        self.load_csv_btn = QPushButton("Select Specific Result")
+        self.load_csv_btn = QPushButton("Load Results from CSV")
         self.load_csv_btn.setStyleSheet("""
             QPushButton {
                 background-color: #3498db;
@@ -517,9 +517,6 @@ class KnapsackGUIEnhanced(QMainWindow):
         
         self.tabs.addTab(self.tab_experiments, "Chapter 3 Experiments")
         
-        # Auto-load overview when tab is shown
-        self.tabs.currentChanged.connect(self.on_tab_changed)
-        
         layout.addWidget(self.tabs)
         
         return panel
@@ -531,11 +528,6 @@ class KnapsackGUIEnhanced(QMainWindow):
         line.setFrameShadow(QFrame.Sunken)
         line.setStyleSheet("background-color: #bdc3c7;")
         return line
-    
-    def on_tab_changed(self, index):
-        """Handle tab change - auto-load Chapter 3 overview"""
-        if self.tabs.tabText(index) == "Chapter 3 Experiments":
-            self.show_experiments_overview()
     
     def on_test_case_changed(self, test_name):
         """Handle test case selection change"""
@@ -783,8 +775,8 @@ class KnapsackGUIEnhanced(QMainWindow):
                     # Add average as lighter line
                     if 'avg_fitness' in result['convergence']:
                         avg_history = result['convergence']['avg_fitness']
-                        ax.plot(iterations, avg_history, color='blue', linewidth=1.2, alpha=0.5,
-                               label='BPSO (Avg)', linestyle='--')
+                        ax.plot(iterations, avg_history, 'b--', linewidth=1.2, alpha=0.5,
+                               label='BPSO (Avg)', marker='', linestyle='--')
             
             # GBFS "convergence" (horizontal line at final value)
             if 'gbfs' in self.results:
@@ -991,33 +983,385 @@ class KnapsackGUIEnhanced(QMainWindow):
                 self.current_test_data,
                 self.current_test_case
             )
+            
+            # Title
+            ax.text(0.5, 0.95, 'GBFS (Greedy Best-First Search) Algorithm', 
+                   ha='center', fontsize=16, fontweight='bold', transform=ax.transAxes)
+            
+            # Coordinates for flowchart
+            y_start = 0.85
+            y_step = 0.11
+            x_center = 0.5
+            box_width = 0.3
+            box_height = 0.06
+            
+            # START box (green)
+            start_box = FancyBboxPatch((x_center - box_width/2, y_start - box_height/2), 
+                                      box_width, box_height,
+                                      boxstyle="round,pad=0.01", 
+                                      facecolor='#2ecc71', edgecolor='black', linewidth=2,
+                                      transform=ax.transAxes)
+            ax.add_patch(start_box)
+            ax.text(x_center, y_start, 'START', ha='center', va='center', 
+                   fontsize=11, fontweight='bold', color='white', transform=ax.transAxes)
+            
+            # Arrow down
+            y_current = y_start - box_height/2 - 0.02
+            arrow1 = FancyArrowPatch((x_center, y_current), (x_center, y_current - 0.03),
+                                    arrowstyle='->', mutation_scale=20, linewidth=2,
+                                    transform=ax.transAxes, color='black')
+            ax.add_patch(arrow1)
+            
+            # Step 1: Initialize
+            y_current -= 0.03 + box_height/2
+            box1 = FancyBboxPatch((x_center - box_width/2, y_current - box_height/2),
+                                 box_width, box_height,
+                                 boxstyle="round,pad=0.01",
+                                 facecolor='#3498db', edgecolor='black', linewidth=2,
+                                 transform=ax.transAxes)
+            ax.add_patch(box1)
+            ax.text(x_center, y_current, 'Initialize: Open List = {start_state}', 
+                   ha='center', va='center', fontsize=10, color='white', transform=ax.transAxes)
+            
+            # Arrow
+            y_current -= box_height/2 + 0.02
+            arrow2 = FancyArrowPatch((x_center, y_current), (x_center, y_current - 0.03),
+                                    arrowstyle='->', mutation_scale=20, linewidth=2,
+                                    transform=ax.transAxes, color='black')
+            ax.add_patch(arrow2)
+            
+            # Step 2: Loop condition (diamond)
+            y_current -= 0.03 + 0.04
+            diamond_points = [
+                [x_center, y_current + 0.04],
+                [x_center + 0.08, y_current],
+                [x_center, y_current - 0.04],
+                [x_center - 0.08, y_current]
+            ]
+            from matplotlib.patches import Polygon
+            diamond = Polygon(diamond_points, facecolor='#f39c12', edgecolor='black', 
+                            linewidth=2, transform=ax.transAxes)
+            ax.add_patch(diamond)
+            ax.text(x_center, y_current, 'Open List\nEmpty?', ha='center', va='center',
+                   fontsize=9, fontweight='bold', transform=ax.transAxes)
+            
+            # Yes arrow (right)
+            arrow_yes = FancyArrowPatch((x_center + 0.08, y_current), (x_center + 0.2, y_current),
+                                       arrowstyle='->', mutation_scale=20, linewidth=2,
+                                       transform=ax.transAxes, color='black')
+            ax.add_patch(arrow_yes)
+            ax.text(x_center + 0.12, y_current + 0.02, 'Yes', fontsize=9, transform=ax.transAxes)
+            
+            # END box (right, green)
+            end_box = FancyBboxPatch((x_center + 0.2, y_current - box_height/2),
+                                    0.15, box_height,
+                                    boxstyle="round,pad=0.01",
+                                    facecolor='#2ecc71', edgecolor='black', linewidth=2,
+                                    transform=ax.transAxes)
+            ax.add_patch(end_box)
+            ax.text(x_center + 0.275, y_current, 'END', ha='center', va='center',
+                   fontsize=11, fontweight='bold', color='white', transform=ax.transAxes)
+            
+            # No arrow (down)
+            y_current -= 0.04 + 0.02
+            arrow_no = FancyArrowPatch((x_center, y_current + 0.02), (x_center, y_current),
+                                      arrowstyle='->', mutation_scale=20, linewidth=2,
+                                      transform=ax.transAxes, color='black')
+            ax.add_patch(arrow_no)
+            ax.text(x_center - 0.05, y_current + 0.01, 'No', fontsize=9, transform=ax.transAxes)
+            
+            # Step 3: Pop best node
+            y_current -= box_height/2
+            box3 = FancyBboxPatch((x_center - box_width/2, y_current - box_height/2),
+                                 box_width, box_height,
+                                 boxstyle="round,pad=0.01",
+                                 facecolor='#3498db', edgecolor='black', linewidth=2,
+                                 transform=ax.transAxes)
+            ax.add_patch(box3)
+            ax.text(x_center, y_current, 'Pop node with best h(n)', 
+                   ha='center', va='center', fontsize=10, color='white', transform=ax.transAxes)
+            
+            # Arrow
+            y_current -= box_height/2 + 0.02
+            arrow4 = FancyArrowPatch((x_center, y_current), (x_center, y_current - 0.03),
+                                    arrowstyle='->', mutation_scale=20, linewidth=2,
+                                    transform=ax.transAxes, color='black')
+            ax.add_patch(arrow4)
+            
+            # Step 4: Goal check (diamond)
+            y_current -= 0.03 + 0.04
+            diamond2_points = [
+                [x_center, y_current + 0.04],
+                [x_center + 0.08, y_current],
+                [x_center, y_current - 0.04],
+                [x_center - 0.08, y_current]
+            ]
+            diamond2 = Polygon(diamond2_points, facecolor='#f39c12', edgecolor='black',
+                             linewidth=2, transform=ax.transAxes)
+            ax.add_patch(diamond2)
+            ax.text(x_center, y_current, 'Goal\nReached?', ha='center', va='center',
+                   fontsize=9, fontweight='bold', transform=ax.transAxes)
+            
+            # Yes arrow (right to END)
+            arrow_goal_yes = FancyArrowPatch((x_center + 0.08, y_current), 
+                                            (x_center + 0.2, y_current),
+                                            arrowstyle='->', mutation_scale=20, linewidth=2,
+                                            transform=ax.transAxes, color='green', linestyle='--')
+            ax.add_patch(arrow_goal_yes)
+            ax.text(x_center + 0.12, y_current - 0.02, 'Yes', fontsize=9, 
+                   color='green', transform=ax.transAxes)
+            
+            # No arrow (down)
+            y_current -= 0.04 + 0.02
+            arrow_goal_no = FancyArrowPatch((x_center, y_current + 0.02), 
+                                           (x_center, y_current),
+                                           arrowstyle='->', mutation_scale=20, linewidth=2,
+                                           transform=ax.transAxes, color='black')
+            ax.add_patch(arrow_goal_no)
+            ax.text(x_center - 0.05, y_current + 0.01, 'No', fontsize=9, transform=ax.transAxes)
+            
+            # Step 5: Expand node
+            y_current -= box_height/2
+            box5 = FancyBboxPatch((x_center - box_width/2, y_current - box_height/2),
+                                 box_width, box_height,
+                                 boxstyle="round,pad=0.01",
+                                 facecolor='#3498db', edgecolor='black', linewidth=2,
+                                 transform=ax.transAxes)
+            ax.add_patch(box5)
+            ax.text(x_center, y_current, 'Expand node, add children to Open List',
+                   ha='center', va='center', fontsize=9, color='white', transform=ax.transAxes)
+            
+            # Loop back arrow
+            arrow_loop = FancyArrowPatch((x_center - box_width/2, y_current),
+                                        (x_center - box_width/2 - 0.1, y_current),
+                                        arrowstyle='->', mutation_scale=20, linewidth=2,
+                                        transform=ax.transAxes, color='blue',
+                                        connectionstyle="arc3,rad=.5")
+            ax.add_patch(arrow_loop)
+            
+            # Heuristic info box
+            info_text = (
+                "Heuristic Function h(n):\n"
+                "Fractional Knapsack Bound\n"
+                "(Greedy relaxation of 0/1 Knapsack)"
+            )
+            info_box = FancyBboxPatch((0.05, 0.05), 0.35, 0.12,
+                                     boxstyle="round,pad=0.01",
+                                     facecolor='wheat', alpha=0.3, edgecolor='black',
+                                     linewidth=1.5, transform=ax.transAxes)
+            ax.add_patch(info_box)
+            ax.text(0.225, 0.11, info_text, ha='center', va='center',
+                   fontsize=9, family='monospace', transform=ax.transAxes)
+            
+            ax.set_xlim(0, 1)
+            ax.set_ylim(0, 1)
+            
+            self.canvas_gbfs_tree.draw()
+            
         except Exception as e:
-            print(f"Error visualizing GBFS: {e}")
+            print(f"Error visualizing GBFS flowchart: {e}")
             import traceback
             traceback.print_exc()
     
     def visualize_bpso_swarm(self):
-        """Visualize BPSO swarm behavior"""
-        if 'bpso' not in self.results:
+        """Visualize BPSO algorithm flowchart - GA_TSP style"""
+        try:
             fig = self.canvas_bpso_swarm.fig
             fig.clear()
             ax = fig.add_subplot(111)
-            ax.text(0.5, 0.5, 'Run BPSO algorithm to see swarm behavior', 
-                   ha='center', va='center', fontsize=14, transform=ax.transAxes)
             ax.axis('off')
-            self.canvas_bpso_swarm.draw()
-            return
-        
-        try:
-            visualize_bpso_swarm_behavior(
-                self.canvas_bpso_swarm,
-                self.results['bpso'],
-                self.current_test_data
+            
+            # Draw BPSO flowchart
+            from matplotlib.patches import FancyBboxPatch, FancyArrowPatch, Polygon
+            
+            # Title
+            ax.text(0.5, 0.95, 'BPSO (Binary Particle Swarm Optimization) Algorithm',
+                   ha='center', fontsize=16, fontweight='bold', transform=ax.transAxes)
+            
+            # Coordinates
+            y_start = 0.85
+            x_center = 0.5
+            box_width = 0.35
+            box_height = 0.06
+            
+            # START box (green)
+            start_box = FancyBboxPatch((x_center - box_width/2, y_start - box_height/2),
+                                      box_width, box_height,
+                                      boxstyle="round,pad=0.01",
+                                      facecolor='#2ecc71', edgecolor='black', linewidth=2,
+                                      transform=ax.transAxes)
+            ax.add_patch(start_box)
+            ax.text(x_center, y_start, 'START', ha='center', va='center',
+                   fontsize=11, fontweight='bold', color='white', transform=ax.transAxes)
+            
+            # Arrow down
+            y_current = y_start - box_height/2 - 0.02
+            arrow1 = FancyArrowPatch((x_center, y_current), (x_center, y_current - 0.03),
+                                    arrowstyle='->', mutation_scale=20, linewidth=2,
+                                    transform=ax.transAxes, color='black')
+            ax.add_patch(arrow1)
+            
+            # Step 1: Initialize
+            y_current -= 0.03 + box_height/2
+            box1 = FancyBboxPatch((x_center - box_width/2, y_current - box_height/2),
+                                 box_width, box_height,
+                                 boxstyle="round,pad=0.01",
+                                 facecolor='#3498db', edgecolor='black', linewidth=2,
+                                 transform=ax.transAxes)
+            ax.add_patch(box1)
+            ax.text(x_center, y_current, 'Initialize: swarm (N particles), velocities, pbest, gbest',
+                   ha='center', va='center', fontsize=9, color='white', transform=ax.transAxes)
+            
+            # Arrow
+            y_current -= box_height/2 + 0.02
+            arrow2 = FancyArrowPatch((x_center, y_current), (x_center, y_current - 0.03),
+                                    arrowstyle='->', mutation_scale=20, linewidth=2,
+                                    transform=ax.transAxes, color='black')
+            ax.add_patch(arrow2)
+            
+            # Step 2: Loop condition (diamond)
+            y_current -= 0.03 + 0.04
+            diamond_points = [
+                [x_center, y_current + 0.04],
+                [x_center + 0.08, y_current],
+                [x_center, y_current - 0.04],
+                [x_center - 0.08, y_current]
+            ]
+            diamond = Polygon(diamond_points, facecolor='#f39c12', edgecolor='black',
+                            linewidth=2, transform=ax.transAxes)
+            ax.add_patch(diamond)
+            ax.text(x_center, y_current, 'Iterations\n< Max?', ha='center', va='center',
+                   fontsize=9, fontweight='bold', transform=ax.transAxes)
+            
+            # Yes arrow (right)
+            arrow_yes = FancyArrowPatch((x_center + 0.08, y_current), (x_center + 0.2, y_current),
+                                       arrowstyle='->', mutation_scale=20, linewidth=2,
+                                       transform=ax.transAxes, color='black')
+            ax.add_patch(arrow_yes)
+            ax.text(x_center + 0.12, y_current + 0.02, 'No', fontsize=9, transform=ax.transAxes)
+            
+            # END box (right, green)
+            end_box = FancyBboxPatch((x_center + 0.2, y_current - box_height/2),
+                                    0.15, box_height,
+                                    boxstyle="round,pad=0.01",
+                                    facecolor='#2ecc71', edgecolor='black', linewidth=2,
+                                    transform=ax.transAxes)
+            ax.add_patch(end_box)
+            ax.text(x_center + 0.275, y_current, 'END', ha='center', va='center',
+                   fontsize=11, fontweight='bold', color='white', transform=ax.transAxes)
+            
+            # Yes arrow (down)
+            y_current -= 0.04 + 0.02
+            arrow_no = FancyArrowPatch((x_center, y_current + 0.02), (x_center, y_current),
+                                      arrowstyle='->', mutation_scale=20, linewidth=2,
+                                      transform=ax.transAxes, color='black')
+            ax.add_patch(arrow_no)
+            ax.text(x_center - 0.05, y_current + 0.01, 'Yes', fontsize=9, transform=ax.transAxes)
+            
+            # Step 3: For each particle
+            y_current -= box_height/2
+            box3 = FancyBboxPatch((x_center - box_width/2, y_current - box_height/2),
+                                 box_width, box_height,
+                                 boxstyle="round,pad=0.01",
+                                 facecolor='#9b59b6', edgecolor='black', linewidth=2,
+                                 transform=ax.transAxes)
+            ax.add_patch(box3)
+            ax.text(x_center, y_current, 'For each particle i in swarm:',
+                   ha='center', va='center', fontsize=9, color='white', transform=ax.transAxes)
+            
+            # Arrow
+            y_current -= box_height/2 + 0.02
+            arrow4 = FancyArrowPatch((x_center, y_current), (x_center, y_current - 0.03),
+                                    arrowstyle='->', mutation_scale=20, linewidth=2,
+                                    transform=ax.transAxes, color='black')
+            ax.add_patch(arrow4)
+            
+            # Step 4: Update velocity
+            y_current -= 0.03 + box_height/2
+            box4 = FancyBboxPatch((x_center - box_width/2, y_current - box_height/2),
+                                 box_width, box_height,
+                                 boxstyle="round,pad=0.01",
+                                 facecolor='#3498db', edgecolor='black', linewidth=2,
+                                 transform=ax.transAxes)
+            ax.add_patch(box4)
+            ax.text(x_center, y_current, 'v[i] = w*v[i] + c1*r1*(pbest[i]-x[i]) + c2*r2*(gbest-x[i])',
+                   ha='center', va='center', fontsize=8, color='white', 
+                   family='monospace', transform=ax.transAxes)
+            
+            # Arrow
+            y_current -= box_height/2 + 0.02
+            arrow5 = FancyArrowPatch((x_center, y_current), (x_center, y_current - 0.03),
+                                    arrowstyle='->', mutation_scale=20, linewidth=2,
+                                    transform=ax.transAxes, color='black')
+            ax.add_patch(arrow5)
+            
+            # Step 5: Update position (sigmoid)
+            y_current -= 0.03 + box_height/2
+            box5 = FancyBboxPatch((x_center - box_width/2, y_current - box_height/2),
+                                 box_width, box_height,
+                                 boxstyle="round,pad=0.01",
+                                 facecolor='#3498db', edgecolor='black', linewidth=2,
+                                 transform=ax.transAxes)
+            ax.add_patch(box5)
+            ax.text(x_center, y_current, 'x[i] = 1 if sigmoid(v[i]) > rand() else 0',
+                   ha='center', va='center', fontsize=9, color='white', 
+                   family='monospace', transform=ax.transAxes)
+            
+            # Arrow
+            y_current -= box_height/2 + 0.02
+            arrow6 = FancyArrowPatch((x_center, y_current), (x_center, y_current - 0.03),
+                                    arrowstyle='->', mutation_scale=20, linewidth=2,
+                                    transform=ax.transAxes, color='black')
+            ax.add_patch(arrow6)
+            
+            # Step 6: Evaluate fitness
+            y_current -= 0.03 + box_height/2
+            box6 = FancyBboxPatch((x_center - box_width/2, y_current - box_height/2),
+                                 box_width, box_height,
+                                 boxstyle="round,pad=0.01",
+                                 facecolor='#3498db', edgecolor='black', linewidth=2,
+                                 transform=ax.transAxes)
+            ax.add_patch(box6)
+            ax.text(x_center, y_current, 'Evaluate fitness(x[i]), Update pbest[i] & gbest',
+                   ha='center', va='center', fontsize=9, color='white', transform=ax.transAxes)
+            
+            # Loop back arrow
+            arrow_loop = FancyArrowPatch((x_center - box_width/2, y_current),
+                                        (x_center - box_width/2 - 0.12, y_current),
+                                        arrowstyle='->', mutation_scale=20, linewidth=2,
+                                        transform=ax.transAxes, color='purple',
+                                        connectionstyle="arc3,rad=.7")
+            ax.add_patch(arrow_loop)
+            ax.text(x_center - box_width/2 - 0.15, y_current + 0.15, 'Next\nIteration',
+                   ha='center', fontsize=9, color='purple', transform=ax.transAxes)
+            
+            # Parameters info box
+            info_text = (
+                "BPSO Parameters:\n"
+                "w = 0.7 (Inertia weight)\n"
+                "c1 = 2.0 (Cognitive coeff.)\n"
+                "c2 = 2.0 (Social coeff.)\n"
+                "N = 30 (Swarm size)\n"
+                "Max Iter = 100"
             )
+            info_box = FancyBboxPatch((0.02, 0.02), 0.25, 0.18,
+                                     boxstyle="round,pad=0.01",
+                                     facecolor='lightblue', alpha=0.3, edgecolor='black',
+                                     linewidth=1.5, transform=ax.transAxes)
+            ax.add_patch(info_box)
+            ax.text(0.145, 0.11, info_text, ha='center', va='center',
+                   fontsize=8.5, family='monospace', transform=ax.transAxes)
+            
+            ax.set_xlim(0, 1)
+            ax.set_ylim(0, 1)
+            
+            self.canvas_bpso_swarm.draw()
+            
         except Exception as e:
-            print(f"Error visualizing BPSO: {e}")
+            print(f"Error visualizing BPSO flowchart: {e}")
             import traceback
             traceback.print_exc()
+    
     
     def visualize_regional_distribution(self):
         """Visualize regional distribution of selected items"""
@@ -1276,87 +1620,6 @@ class KnapsackGUIEnhanced(QMainWindow):
             traceback.print_exc()
         finally:
             progress.close()
-    
-    def show_experiments_overview(self):
-        """Show overview of all Chapter 3 experiments"""
-        try:
-            import os
-            results_dir = 'results/chapter3'
-            
-            fig = self.canvas_experiments.fig
-            fig.clear()
-            
-            if not os.path.exists(results_dir):
-                # Show placeholder
-                ax = fig.add_subplot(111)
-                ax.text(0.5, 0.5, 
-                       'Chapter 3 Experiment Results\n\n'
-                       'No results found yet.\n'
-                       'Click "RUN CHAPTER 3 EXPERIMENTS" to generate results.\n\n'
-                       'Expected files in results/chapter3/:\n'
-                       '  • 3_1_1_a_gbfs_params.csv\n'
-                       '  • 3_1_1_b_bpso_swarm_size.csv\n'
-                       '  • 3_1_1_c_bpso_iterations.csv\n'
-                       '  • 3_1_2_comparison_*.csv\n'
-                       '  • 3_1_3_data_characteristics.csv',
-                       ha='center', va='center', fontsize=12,
-                       bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.3, pad=2),
-                       transform=ax.transAxes)
-                ax.axis('off')
-                fig.tight_layout()
-                self.canvas_experiments.draw()
-                return
-            
-            # Count available results
-            csv_files = [f for f in os.listdir(results_dir) if f.endswith('.csv')]
-            png_files = [f for f in os.listdir(results_dir) if f.endswith('.png')]
-            
-            # Create overview
-            ax = fig.add_subplot(111)
-            ax.axis('off')
-            
-            overview_text = (
-                '══════════════════════════════════════════════════\n'
-                '     Chapter 3 Experiment Results Overview\n'
-                '══════════════════════════════════════════════════\n\n'
-                f'CSV Results: {len(csv_files)} files\n'
-                f'PNG Images: {len(png_files)} files\n\n'
-            )
-            
-            if csv_files:
-                overview_text += '\nCSV Data Files (used in GUI):\n'
-                for i, f in enumerate(sorted(csv_files), 1):
-                    overview_text += f'  {i}. {f}\n'
-            
-            if png_files:
-                overview_text += '\n\nPNG Images (for reports only):\n'
-                for i, f in enumerate(sorted(png_files)[:5], 1):
-                    overview_text += f'  {i}. {f}\n'
-                if len(png_files) > 5:
-                    overview_text += f'  ... and {len(png_files)-5} more\n'
-            
-            overview_text += (
-                '\n\n══════════════════════════════════════════════════\n'
-                'INFO: PNG files are created by chapter3_experiments_v2.py\n'
-                '      They are NOT used in this GUI (GUI renders from CSV)\n'
-                '      Use PNG files for presentations/reports only\n\n'
-                'Click "Select Specific Result" to view detailed chart\n'
-                '══════════════════════════════════════════════════'
-            )
-            
-            ax.text(0.5, 0.5, overview_text, 
-                   ha='center', va='center', fontsize=10.5, family='monospace',
-                   bbox=dict(boxstyle='round,pad=1.5', facecolor='lightblue', 
-                           alpha=0.2, edgecolor='#3498db', linewidth=2),
-                   transform=ax.transAxes)
-            
-            fig.tight_layout()
-            self.canvas_experiments.draw()
-            
-        except Exception as e:
-            print(f"Error showing experiments overview: {e}")
-            import traceback
-            traceback.print_exc()
     
     def load_experiment_results(self):
         """Load and visualize experiment results from CSV"""
