@@ -1,9 +1,8 @@
 """
 =================================================================================
-ADVANCED VISUALIZATION - Inspired by GA_TSP
+ADVANCED VISUALIZATION 
 =================================================================================
-Tạo visualization cho Section 3.2 - Phân tích và Đánh giá
-Học từ GA_TSP:
+Tạo visualization cho Section 3.2
 - Convergence plots chi tiết
 - Parameter impact analysis
 - Algorithm behavior visualization
@@ -338,7 +337,6 @@ class AdvancedKnapsackVisualizer:
                                           save_path=None):
         """
         So sánh chi tiết 3 thuật toán (hoặc 4 nếu có BPSO variant)
-        Như GA_TSP so sánh các mutations/crossover/selection
         
         Args:
             gbfs_result: Dict từ solve_gbfs()
@@ -655,8 +653,7 @@ class AdvancedKnapsackVisualizer:
     
     def plot_knapsack_solution_map(self, solution: Dict, items_data: pd.DataFrame, save_path=None):
         """
-        Vẽ "map" của solution - Thay vì map địa lý như TSP, 
-        ta vẽ visualization của items được chọn
+        Vẽ "map" của solution - ta vẽ visualization của items được chọn
         
         Visualization:
         - Capacity utilization (bar chart như map route)
@@ -800,7 +797,6 @@ class AdvancedKnapsackVisualizer:
     def plot_algorithm_comparison(self, df_comparison: pd.DataFrame, title=None, save_path=None):
         """
         Comprehensive algorithm comparison visualization
-        Like GA_TSP comparing GA vs RLGA vs GA+SA
         
         Args:
             df_comparison: DataFrame with columns [algorithm, value_mean, value_std, time_mean, pct_optimal]

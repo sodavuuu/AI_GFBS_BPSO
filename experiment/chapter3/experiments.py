@@ -9,7 +9,6 @@ Tổ chức experiments theo structure:
 
 Mỗi experiment sinh ra:
 - CSV data file
-- Visualization charts (like GA_TSP)
 =================================================================================
 """
 

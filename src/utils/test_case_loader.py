@@ -1,6 +1,6 @@
 """
 =================================================================================
-MODULE: Data Loader V2
+MODULE: Data Loader 
 =================================================================================
 Load test cases from pre-generated CSV files in data/test_cases/
 
@@ -29,10 +29,10 @@ class TestCaseLoader:
         summary_path = self.test_cases_dir / 'test_cases_summary.csv'
         if summary_path.exists():
             self.summary = pd.read_csv(summary_path)
-            print(f"✅ Loaded {len(self.summary)} test cases from {test_cases_dir}/")
+            print(f" Loaded {len(self.summary)} test cases from {test_cases_dir}/")
         else:
             raise FileNotFoundError(
-                f"⚠️  Summary file not found at {summary_path}\n"
+                f"  Summary file not found at {summary_path}\n"
                 f"Please run: python src/data_generator.py"
             )
     
@@ -147,7 +147,7 @@ class TestCaseLoader:
                     tc = self.load_test_case(name)
                     test_cases.append(tc)
                 except Exception as e:
-                    print(f"⚠️  Failed to load {name}: {e}")
+                    print(f"  Failed to load {name}: {e}")
         return test_cases
     
     def print_summary(self):
@@ -179,7 +179,7 @@ class SalesDataLoader(TestCaseLoader):
     def __init__(self, excel_path='data/sales_data.xlsx'):
         # Ignore excel_path, use test cases instead
         super().__init__()
-        print("⚠️  Note: Now using pre-generated test cases from data/test_cases/")
+        print("  Note: Now using pre-generated test cases from data/test_cases/")
     
     def get_problem_by_region(self, region, capacity_ratio=0.5, max_items=None):
         """Load region test case (medium size by default)"""

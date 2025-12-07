@@ -6,7 +6,6 @@ Combines best features from both previous GUIs:
 1. Interactive item selection (click to select)
 2. Algorithm visualization (show selection process)
 3. Chapter 3 experiments integration
-4. Clean layout inspired by GA_TSP
 =================================================================================
 Problem: Multi-Objective 0/1 Knapsack
 - Objective 1: Maximize total value
@@ -16,7 +15,6 @@ Problem: Multi-Objective 0/1 Knapsack
 Algorithms:
 - GBFS (Greedy Best-First Search): Fast heuristic
 - BPSO (Binary Particle Swarm Optimization): Metaheuristic
-- DP (Dynamic Programming): Optimal solution
 =================================================================================
 """
 

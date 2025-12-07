@@ -11,7 +11,6 @@ from matplotlib.patches import FancyArrowPatch, Circle
 def visualize_gbfs_selection_steps(canvas, result, test_data, test_case):
     """
     Visualize GBFS greedy selection step-by-step
-    Like TSP showing cities being selected in order
     """
     fig = canvas.fig
     fig.clear()
